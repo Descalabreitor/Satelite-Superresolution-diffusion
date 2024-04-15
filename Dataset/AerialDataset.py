@@ -27,4 +27,4 @@ class AerialDataset(Dataset):
         lr_image = transforms.ToTensor()(lr_image)
         hr_image = transforms.ToTensor()(hr_image)
 
-        return lr_image, hr_image
+        return [lr_image, hr_image, sr_lr_image]
