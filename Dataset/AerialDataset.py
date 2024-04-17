@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 import os
@@ -12,7 +13,7 @@ class AerialDataset(Dataset):
         self.dataset_path = dataset_path
         lr_dir = os.path.join(dataset_path, str(lr_size))
         hr_dir = os.path.join(dataset_path, str(hr_size))
-        sr_dir = os.path.join(dataset_path, "sr" + str(lr_size) + "_" + str(hr_size))
+        sr_dir = os.path.join(dataset_path, os.path.join("sr", str(lr_size) + "_" + str(hr_size)))
 
         self.low_res_images = [os.path.join(lr_dir, image) for image in os.listdir(lr_dir)]
         self.high_res_images = [os.path.join(hr_dir, image) for image in os.listdir(hr_dir)]

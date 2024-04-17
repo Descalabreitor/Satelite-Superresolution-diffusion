@@ -3,6 +3,8 @@ from tqdm import tqdm
 from torch.utils.tensorboard import SummaryWriter
 
 from utils.checkpoint_utils import *
+from utils.tensor_utils import tensors_to_scalars
+from utils.logger_utils import *
 
 class Trainer:
     def __init__(self, logs_dir):
@@ -12,37 +14,13 @@ class Trainer:
         self.logger = SummaryWriter(logs_dir)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def set_optimizer(self, optimizer, params, lr=1e-3, momentum=0.9):
-        optimizers = {
-            'adam': torch.optim.Adam(params, lr=lr),
-            'sgd': torch.optim.SGD(params, lr=lr, momentum=momentum)
-        }
+    def build_optimizer(self, optimizer, params, lr=1e-3, momentum=0.9):
+        raise NotImplementedError
+    def build_model(self, model):
+        raise NotImplementedError
 
-        if optimizer not in optimizers.keys():
-            raise ValueError(
-                f"Optimizador '{optimizer}' not suported. Valid Options: {', '.join(optimizers.keys())}")
-
-        self.optimizer = optimizers[optimizer]
-        return self
-
-    def set_model(self, model):
-        self.model = model
-        return self
-
-    def set_scheduler(self, scheduler_type, lr_decay=0.1, step_size=10):
-        schedulers = {
-            'reduce_on_plateau': torch.optim.lr_scheduler.ReduceLROnPlateau(self.optimizer, patience=step_size,
-                                                                            factor=lr_decay, verbose=True),
-            'step_lr': torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=step_size, gamma=lr_decay)
-        }
-
-        # Elegir el scheduler basado en el argumento 'scheduler_type'
-        if scheduler_type not in schedulers.keys():
-            raise ValueError(
-                f"Scheduler '{scheduler_type}' no soportado. Opciones válidas: {', '.join(schedulers.keys())}")
-
-        self.scheduler = schedulers[scheduler_type]
-        return self
+    def build_scheduler(self, scheduler_type, lr_decay=0.1, step_size=10):
+        raise NotImplementedError
 
     def train(self, train_dataloader, val_dataloader, save_interval, max_steps, checkpoints_dir=None):
         self.global_step = load_checkpoint(self.model, self.optimizer, checkpoints_dir)
@@ -54,16 +32,29 @@ class Trainer:
                         self.model.eval()
                         self.validate(val_dataloader, self.global_step)
                     save_checkpoint(self.model, self.optimizer, checkpoints_dir, self.global_step, 10)
-            self.model.train()
-            batch.to(self.device)
-            losses, total_loss = self.training_step(batch)
+                self.model.train()
+                batch.to(self.device)
+                losses, total_loss = self.training_step(batch)
+                self.optimizer.zero_grad()
 
-    def training_step(self, batch):
-        img_hr = batch[]
+                total_loss.backward()
+                self.optimizer.step()
+                self.global_step += 1
+                self.scheduler.step(self.global_step)
+                if self.global_step % save_interval == 0:
+                    log_metrics(self.logger, {f'tr/{k}': v for k, v in losses.items()}, self.global_step)
+                train_pbar.set_postfix(**tensors_to_scalars(losses))
+
+
 
     def validate(self, val_loader):
-        #todo
+        pbar = tqdm(enumerate(val_loader), total=len(val_loader), dynamic_ncols=True, unit='step')
+        for batch_idx, batch in pbar:
+            batch.to(self.device)
+
+
 
     def test(self):
 
-#todo
+    def training_step(self, batch):
+        raise NotImplementedError
