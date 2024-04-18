@@ -8,20 +8,21 @@ from utils.tensor_utils import tensors_to_scalars
 from utils.logger_utils import *
 
 class Trainer:
-    def __init__(self, logs_dir):
+    def __init__(self, logs_dir, metrics_used):
         self.scheduler = None
         self.optimizer = None
         self.model = None
+        self.metrics_used = metrics_used
         self.logger = SummaryWriter(logs_dir)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    def build_optimizer(self, optimizer, params, lr=1e-3, momentum=0.9):
-        raise NotImplementedError
-    def build_model(self, model):
-        raise NotImplementedError
+    def set_optimizer(self, optimizer):
+        self.optimizer = optimizer
+    def set_model(self, model):
+        self.model = model
 
-    def build_scheduler(self, scheduler_type, lr_decay=0.1, step_size=10):
-        raise NotImplementedError
+    def set_scheduler(self, scheduler):
+        self.scheduler = scheduler
 
     def train(self, train_dataloader, val_dataloader, save_interval, max_steps, checkpoints_dir=None):
         global_step = load_checkpoint(self.model, self.optimizer, checkpoints_dir)
@@ -54,7 +55,7 @@ class Trainer:
             batch.to(self.device)
             img, rrdb_out, ret = self.sample_test(batch)
             metrics = {}
-            metrics.update({k: np.mean(ret[k]) for k in self.metric_keys})
+            metrics.update({k: np.mean(ret[k]) for k in self.metrics_used})
             pbar.set_postfix(**tensors_to_scalars(metrics))
             print('Val results:', metrics)
             log_metrics({f'val/{k}': v for k, v in metrics.items()}, global_step)
@@ -75,7 +76,17 @@ class Trainer:
     #test_ func deactivated at the moment. Validation func with test dataloader will be used
 
     def training_step(self, batch):
-        raise NotImplementedError
+        img_hr = batch['hr']
+        img_lr = batch['lr']
+        img_bicubic = batch['bicubic']
+        losses, _ = self.model(img_hr, img_lr, img_bicubic)
+        total_loss = np.sum(losses.values())
+        return losses, total_loss
 
     def sample_test(self, batch):
-        raise NotImplementedError
+        results = {k: 0 for k in self.metrics_used}
+        results['n_samples'] = 0
+        img_hr = batch['hr']
+        img_lr = batch['lr']
+        img_bicubic = batch['bicubic']
+        img_sr = self.model(img_lr, img_bicubic)

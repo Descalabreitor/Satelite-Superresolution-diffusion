@@ -13,11 +13,11 @@ class AerialDataset(Dataset):
         self.dataset_path = dataset_path
         lr_dir = os.path.join(dataset_path, str(lr_size))
         hr_dir = os.path.join(dataset_path, str(hr_size))
-        sr_dir = os.path.join(dataset_path, os.path.join("sr", str(lr_size) + "_" + str(hr_size)))
+        bicubic_dir = os.path.join(dataset_path, os.path.join("sr", str(lr_size) + "_" + str(hr_size)))
 
         self.low_res_images = [os.path.join(lr_dir, image) for image in os.listdir(lr_dir)]
         self.high_res_images = [os.path.join(hr_dir, image) for image in os.listdir(hr_dir)]
-        self.sr_res_images = [os.path.join(sr_dir, image) for image in os.listdir(sr_dir)]
+        self.sr_res_images = [os.path.join(bicubic_dir, image) for image in os.listdir(bicubic_dir)]
 
     def __len__(self):
         return len(self.low_res_images)
@@ -25,10 +25,10 @@ class AerialDataset(Dataset):
     def __getitem__(self, idx):
         lr_image = PIL.Image.open(self.low_res_images[idx])
         hr_image = PIL.Image.open(self.high_res_images[idx])
-        sr_image = PIL.Image.open(self.sr_res_images[idx])
+        bicubic_image = PIL.Image.open(self.sr_res_images[idx])
 
         lr_image = transforms.ToTensor()(lr_image)
         hr_image = transforms.ToTensor()(hr_image)
-        sr_image = transforms.ToTensor()(sr_image)
+        bicubic_image = transforms.ToTensor()(bicubic_image)
 
-        return {'sr': sr_image, 'hr': hr_image, 'lr': lr_image}
+        return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}
