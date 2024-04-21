@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from tqdm import tqdm
-from torch.utils.tensorboard import SummaryWriter
 
 from utils.checkpoint_utils import *
 from utils.tensor_utils import *
@@ -10,12 +9,12 @@ from utils.metrics_utils import *
 
 
 class Trainer:
-    def __init__(self, logs_dir, metrics_used):
+    def __init__(self, project_name, hyperparams, metrics_used):
         self.scheduler = None
         self.optimizer = None
         self.model = None
         self.metrics_used = metrics_used
-        self.logger = SummaryWriter(logs_dir)
+        configure_wandb(project_name, hyperparams)
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def set_optimizer(self, optimizer):
@@ -46,34 +45,19 @@ class Trainer:
                 self.optimizer.step()
                 global_step += 1
                 self.scheduler.step()
-                if global_step % save_interval == 0:
-                    log_metrics(self.logger, {f'tr/{k}': v for k, v in losses.items()}, global_step)
+                wandb.log({'train_loss': losses})
                 train_pbar.set_postfix(**tensors_to_scalars(losses))
+        wandb.finish()
 
     def validate(self, val_loader, global_step):
         for batch in val_loader:
             move_to_cuda(batch)
             img, rrdb_out, ret = self.sample_test(batch)
             metrics = {}
-            metrics.update({k: np.mean(ret[k]) for k in self.metrics_used})
-            pbar.set_postfix(**tensors_to_scalars(metrics))
-            print('Val results:', metrics)
-            log_metrics(self.logger, {f'val/{k}': v for k, v in metrics.items()}, global_step)
+            metrics.update({k: ret[k]/ret['n_samples'] for k in self.metrics_used})
+        print('Val results:', metrics)
+        log_metrics(metrics)
 
-    #    def test(self, test_dataloader, global_step, checkpoints_dir=None):
-    #        load_checkpoint(self.model, self.optimizer, checkpoints_dir=checkpoints_dir)
-    #        with torch.no_grad():
-    #self.model.eval()
-    #pbar = tqdm(enumerate(test_dataloader),total = len(test_dataloader))
-    #for batch_idx, batch in pbar:
-    #    batch.to(self.device)
-    #    img, rrdb_out, ret = self.sample_test(batch)
-    #    metrics = {}
-    #    metrics.update({k: np.mean(ret[k]) for k in self.metric_keys})
-    #    pbar.set_postfix(**tensors_to_scalars(metrics))
-    #    print('Test results:', metrics)
-    #    log_metrics({f'test/{k}': v for k, v in metrics.items()}, global_step)
-    #test_ func deactivated at the moment. Validation func with test dataloader will be used
 
     def training_step(self, batch):
         img_hr = batch['hr']
