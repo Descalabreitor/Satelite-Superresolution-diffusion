@@ -217,7 +217,7 @@ class GaussianDiffusion(nn.Module):
         return model_mean + nonzero_mask * (0.5 * model_log_variance).exp() * noise, x0_pred
 
     @torch.no_grad()
-    def sample(self, img_lr, img_lr_up, shape,use_rrdb, save_intermediate=False):
+    def sample(self, img_lr, img_lr_up, shape, use_rrdb, save_intermediate=False):
         device = self.betas.device
         b = shape[0]
 

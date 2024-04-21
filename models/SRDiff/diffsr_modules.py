@@ -8,7 +8,7 @@ from .commons import ResnetBlock, Upsample, Block, Downsample
 
 
 class RRDBNet(nn.Module):
-    def __init__(self, in_nc, out_nc, nf, nb, gc=32, sr_scale=8):
+    def __init__(self, in_nc, out_nc, nf, nb, gc=32, sr_scale=4):
         super(RRDBNet, self).__init__()
         RRDB_block_f = functools.partial(RRDB, nf=nf, gc=gc)
         self.sr_scale = sr_scale

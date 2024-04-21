@@ -9,14 +9,14 @@ def log_metrics(logger, metrics, step):
         logger.add_scalar(k, v, step)
 
 
-def metrics_to_scalars(self, metrics):
+def metrics_to_scalars(metrics):
     new_metrics = {}
     for k, v in metrics.items():
         if isinstance(v, torch.Tensor):
             v = v.item()
 
         if type(v) is dict:
-            v = self.metrics_to_scalars(v)
+            v = metrics_to_scalars(v)
 
         new_metrics[k] = v
 
