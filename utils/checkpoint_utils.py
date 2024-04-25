@@ -39,8 +39,8 @@ def load_checkpoint(model, optimizer, checkpoints_dir):
         model.cuda()
     return training_step
 
-def save_checkpoint(model, optimizer, work_dir, global_step, num_ckpt_keep):
-    ckpt_path = f'{work_dir}/model_ckpt_steps_{global_step}.ckpt'
+def save_checkpoint(model, optimizer, work_dir, global_step):
+    ckpt_path = f'{work_dir}\\model_ckpt_steps_{global_step}.ckpt'
     print(f'Step@{global_step}: saving model to {ckpt_path}')
     checkpoint = {'global_step': global_step}
     optimizer_states = []
@@ -48,11 +48,5 @@ def save_checkpoint(model, optimizer, work_dir, global_step, num_ckpt_keep):
     checkpoint['optimizer_states'] = optimizer_states
     checkpoint['state_dict'] = {'model': model.state_dict()}
     torch.save(checkpoint, ckpt_path, _use_new_zipfile_serialization=False)
-    for old_ckpt in get_all_ckpts(work_dir)[num_ckpt_keep:]:
-        remove_file(old_ckpt)
-        print(f'Delete ckpt: {os.path.basename(old_ckpt)}')
 
-def remove_file(*fns):
-    for f in fns:
-        subprocess.check_call(f'rm -rf "{f}"', shell=True)
 

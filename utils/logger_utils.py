@@ -3,9 +3,9 @@ import os
 import torch
 import wandb
 
+
 def log_metrics(metrics):
     metrics = metrics_to_scalars(metrics)
-    print(metrics)
     wandb.log(metrics)
 
 
@@ -22,6 +22,7 @@ def metrics_to_scalars(metrics):
 
     return new_metrics
 
+
 def configure_wandb(project, hyperparams):
-    #wandb.login(os.environ['WANDB_LOGIN'])
     wandb.init(project=project, config=hyperparams)
+    wandb.log({"pinga": 10})
