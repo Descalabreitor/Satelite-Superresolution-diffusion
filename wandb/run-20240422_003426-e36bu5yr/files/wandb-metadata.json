@@ -1,0 +1,47 @@
+{
+    "os": "Windows-11-10.0.22631-SP0",
+    "python": "3.12.2",
+    "heartbeatAt": "2024-04-21T23:34:35.719277",
+    "startedAt": "2024-04-21T23:34:26.824499",
+    "docker": null,
+    "cuda": null,
+    "args": [],
+    "state": "running",
+    "program": "experiments.ipynb",
+    "codePathLocal": "experiments.ipynb",
+    "root": "C:/Users/adria/Desktop/TFG-code/SR-model-benchmarking",
+    "git": {
+        "remote": "https://github.com/Descalabreitor/SR-model-benchmarking.git",
+        "commit": "b69abe7dda4b9eaf4841505a96f9ea3feb10075b"
+    },
+    "email": "90756596+Descalabreitor@users.noreply.github.com",
+    "host": "SobremesaAdrian",
+    "username": "adria",
+    "executable": "C:\\Users\\adria\\miniconda3\\envs\\cuda\\python.exe",
+    "cpu_count": 6,
+    "cpu_count_logical": 12,
+    "cpu_freq": {
+        "current": 3801.0,
+        "min": 0.0,
+        "max": 3801.0
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 3801.0,
+            "min": 0.0,
+            "max": 3801.0
+        }
+    ],
+    "disk": {},
+    "gpu": "NVIDIA GeForce RTX 4070",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA GeForce RTX 4070",
+            "memory_total": 12878610432
+        }
+    ],
+    "memory": {
+        "total": 31.147628784179688
+    }
+}
