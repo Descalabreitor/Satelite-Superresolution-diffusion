@@ -9,7 +9,7 @@ from utils.logger_utils import *
 from utils.metrics_utils import *
 
 
-class Trainer:
+class SR3Trainer:
     def __init__(self, metrics_used):
         self.scheduler = None
         self.optimizer = None
