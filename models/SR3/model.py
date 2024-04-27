@@ -90,7 +90,7 @@ class GammaEmbedding(nn.Module):
         self.linear2 = Linear(exp * dim, exp * dim)
         self.dim = dim
 
-        x = torch.log(torch.tensor(5000)) / (self.dim // 2 - 1)  # log( 5000^(1 / (d/2 - 1)) )
+        x = torch.log(torch.tensor(5000)**(self.dim // 2 - 1))  # log( 5000^(1 / (d/2 - 1)) )
         x = torch.exp(torch.arange(0, dim // 2) * -x)  # 1 / 5000^(i / (d/2 - 1))
         self.register_buffer('x', x.reshape((1, -1)))
 

@@ -32,14 +32,13 @@ class SR3Trainer:
         for batch in train_pbar:
             self.model.train()
             move_to_cuda(batch)
-            losses, total_loss = self.training_step(batch)
+            loss = self.training_step(batch)
             self.optimizer.zero_grad()
 
-            total_loss.backward()
-            final_loss += total_loss
+            loss.backward()
+            final_loss += loss
             self.optimizer.step()
             self.scheduler.step()
-            train_pbar.set_postfix(**tensors_to_scalars(losses))
         return final_loss / len(train_dataloader)
 
     def save_model(self, save_dir, step):
@@ -52,9 +51,8 @@ class SR3Trainer:
 
         for batch in val_pbar:
             move_to_cuda(batch)
-            losses, total_loss = self.training_step(batch)
-            val_pbar.set_postfix(**tensors_to_scalars(losses))
-            final_loss += total_loss
+            losses = self.training_step(batch)
+            final_loss += losses
 
         return final_loss / len(val_pbar)
 
@@ -62,10 +60,8 @@ class SR3Trainer:
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
-        losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=True, fix_rrdb=True,
-                                  aux_ssim_loss=False, aux_l1_loss=True, aux_percep_loss=False)
-        total_loss = list(np.sum(losses.values()))[0]
-        return losses, total_loss
+        loss = self.model(img_hr, img_bicubic)
+        return loss
 
     @torch.no_grad()
     def test(self, test_dataloader):
@@ -75,10 +71,9 @@ class SR3Trainer:
         test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
             move_to_cuda(batch)
-            _, _, metrics = self.sample_test(batch)
+            _, metrics = self.sample_test(batch)
             for metric in self.metrics_used:
                 all_metrics[metric] += metrics[metric]/metrics["n_samples"]
-            test_pbar.set_postfix(**tensors_to_scalars(metrics))
         return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}
 
     @torch.no_grad()
@@ -86,9 +81,8 @@ class SR3Trainer:
         metrics = {k: 0 for k in self.metrics_used}
         metrics['n_samples'] = 0
         img_hr = batch['hr']
-        img_lr = batch['lr']
         img_bicubic = batch['bicubic']
-        img_sr, rrdb_out = self.model.sample(img_lr, img_bicubic, img_hr.shape, True)
+        img_sr = self.model.sample(img_bicubic)
         for b in range(img_sr.shape[0]):
             metrics['n_samples'] += 1
             ssim = calculate_ssim(tensor2img(img_sr[b]), tensor2img(img_hr[b]))
@@ -96,4 +90,4 @@ class SR3Trainer:
             metrics['ssim'] += ssim
             metrics['psnr'] += psnr
 
-        return img_sr, rrdb_out, metrics
+        return img_sr, metrics
