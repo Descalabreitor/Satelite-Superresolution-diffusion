@@ -5,15 +5,18 @@ from torchvision.utils import make_grid
 import numpy as np
 import torch
 
-def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1)):
+def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1), normalize=True):
     '''
     Converts a torch Tensor into an image Numpy array
     Input: 4D(B,(3/1),H,W), 3D(C,H,W), or 2D(H,W), any range, RGB channel order
     Output: 3D(H,W,C) or 2D(H,W), [0,255], np.uint8 (default)
     '''
-    tensor = tensor.squeeze().float().cpu().clamp_(*min_max)  # clamp
-    tensor = (tensor - min_max[0]) / \
-             (min_max[1] - min_max[0])  # to range [0,1]
+    if normalize:
+        tensor = tensor.squeeze().float().cpu().clamp_(*min_max)  # clamp
+        tensor = (tensor - min_max[0]) / \
+                 (min_max[1] - min_max[0])  # to range [0,1]
+    else:
+        tensor = tensor.squeeze().float().cpu()
     n_dim = tensor.dim()
     if n_dim == 4:
         n_img = len(tensor)

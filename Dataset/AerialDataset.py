@@ -32,3 +32,12 @@ class AerialDataset(Dataset):
         bicubic_image = transforms.ToTensor()(bicubic_image)
 
         return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}
+
+    def get_image_from_name(self, name):
+        idx = self.get_idx_from_name(name)
+        return self.__getitem__(idx)
+
+    def get_idx_from_name(self, name):
+        for idx, image in enumerate(self.low_res_images):
+            if name in image:
+                return idx

@@ -135,7 +135,7 @@ train.add_argument(
     action="store_true",
     help="freeze the model, except the upsampler",
 )
-train.add_argument("--save-every", type=int, help="keep every nth checkpoints")
+train.add_argument("--save-every", type=int, help="keep every nth models_state_dic")
 train.add_argument("--log-dir", type=str, help="log directory for tensorboard")
 
 

@@ -2,20 +2,21 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-import utils.checkpoint_utils
-from utils.checkpoint_utils import *
+import utils.model_utils
+from utils.model_utils import *
 from utils.tensor_utils import *
 from utils.logger_utils import *
 from utils.metrics_utils import *
 
 
 class SRDiffTrainer:
-    def __init__(self, metrics_used):
+    def __init__(self, metrics_used, model_name):
         self.scheduler = None
         self.optimizer = None
         self.model = None
         self.metrics_used = metrics_used
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model_name = model_name
 
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
@@ -42,8 +43,8 @@ class SRDiffTrainer:
             train_pbar.set_postfix(**tensors_to_scalars(losses))
         return final_loss / len(train_dataloader)
 
-    def save_model(self, save_dir, step):
-        utils.checkpoint_utils.save_checkpoint(self.model, self.optimizer, save_dir, step)
+    def save_model(self, save_dir):
+        utils.model_utils.save_model(self.model, f"SrDiff.pt", save_dir)
 
     def validate(self, val_loader):
         self.model.eval()
@@ -71,11 +72,11 @@ class SRDiffTrainer:
     def test(self, test_dataloader):
         self.model.eval()
         all_metrics = {metric: 0 for metric in self.metrics_used}
-
+        sr_images = []
         test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
             move_to_cuda(batch)
-            _, _, metrics = self.sample_test(batch)
+            sr, _, metrics = self.sample_test(batch)
             for metric in self.metrics_used:
                 all_metrics[metric] += metrics[metric]/metrics["n_samples"]
             test_pbar.set_postfix(**tensors_to_scalars(metrics))

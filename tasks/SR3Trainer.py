@@ -2,20 +2,21 @@ import numpy as np
 import torch
 from tqdm import tqdm
 
-import utils.checkpoint_utils
-from utils.checkpoint_utils import *
+import utils.model_utils
+from utils.model_utils import *
 from utils.tensor_utils import *
 from utils.logger_utils import *
 from utils.metrics_utils import *
 
 
 class SR3Trainer:
-    def __init__(self, metrics_used):
+    def __init__(self, metrics_used, model_name):
         self.scheduler = None
         self.optimizer = None
         self.model = None
         self.metrics_used = metrics_used
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model_name = model_name
 
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
@@ -41,8 +42,8 @@ class SR3Trainer:
             self.scheduler.step()
         return final_loss / len(train_dataloader)
 
-    def save_model(self, save_dir, step):
-        utils.checkpoint_utils.save_checkpoint(self.model, self.optimizer, save_dir, step)
+    def save_model(self, save_dir):
+        utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
 
     def validate(self, val_loader):
         self.model.eval()
@@ -91,3 +92,8 @@ class SR3Trainer:
             metrics['psnr'] += psnr
 
         return img_sr, metrics
+
+    @torch.no_grad()
+    def upscale_img(self, bicubic_img):
+        img_sr = self.model.sample(bicubic_img)
+        return img_sr
