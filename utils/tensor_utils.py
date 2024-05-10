@@ -5,7 +5,7 @@ from torchvision.utils import make_grid
 import numpy as np
 import torch
 
-def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1), normalize=True):
+def tensor2img(tensor, out_type=np.uint8, min_max=(-1, 1), normalize=False):
     '''
     Converts a torch Tensor into an image Numpy array
     Input: 4D(B,(3/1),H,W), 3D(C,H,W), or 2D(H,W), any range, RGB channel order
