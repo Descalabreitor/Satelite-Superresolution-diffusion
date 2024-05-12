@@ -61,9 +61,8 @@ def cosine_beta_schedule(timesteps, s=0.008):
 
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, denoise_fn, rrdb_net, timesteps=1000, loss_type='l1',
-                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02,
-                 aux_perceptual_loss=False, aux_l1_loss=False,
+    def __init__(self, denoise_fn, rrdb_net, aux_perceptual_loss, aux_l1_loss=False, timesteps=1000, loss_type='l1',
+                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02
                  ):
         super().__init__()
         self.denoise_fn = denoise_fn

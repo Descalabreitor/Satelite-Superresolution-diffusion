@@ -44,7 +44,7 @@ class SRDiffTrainer:
         return final_loss / len(train_dataloader)
 
     def save_model(self, save_dir):
-        utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
+        utils.model_utils.save_model(self.model, f"{self}.pt", save_dir)
 
     def validate(self, val_loader):
         self.model.eval()
@@ -63,7 +63,7 @@ class SRDiffTrainer:
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
-        losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=True, fix_rrdb=True,
+        losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=True, fix_rrdb=False,
                                   aux_ssim_loss=aux_ssim_loss, aux_l1_loss=True, aux_percep_loss=aux_perceptual_loss)
         total_loss = list(np.sum(losses.values()))[0]
         return losses, total_loss

@@ -74,7 +74,7 @@ class GaussianDiffusion(nn.Module):
 
         x_t = torch.sqrt(gamma) * x_0 + torch.sqrt(1 - gamma) * epsilon
 
-        loss = F.l1_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+        loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
 
         return loss
 
