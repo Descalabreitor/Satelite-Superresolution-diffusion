@@ -6,7 +6,7 @@ import PIL.Image
 
 
 class AerialDataset(Dataset):
-    def __init__(self, dataset_path, lr_size, hr_size, data_augmentation):
+    def __init__(self, dataset_path, lr_size, hr_size, data_augmentation = None):
         if not os.path.exists(dataset_path):
             raise FileNotFoundError(dataset_path)
 
@@ -31,7 +31,10 @@ class AerialDataset(Dataset):
 
         lr_image = transforms.ToTensor()(lr_image)
         hr_image = transforms.ToTensor()(hr_image)
-        bicubic_image = self.data_augmentation(transforms.ToTensor()(bicubic_image))
+        if self.data_augmentation:
+            bicubic_image = self.data_augmentation(transforms.ToTensor()(bicubic_image))
+        else:
+            bicubic_image = transforms.ToTensor()(bicubic_image)
 
         return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}
 
