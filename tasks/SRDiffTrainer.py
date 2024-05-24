@@ -17,6 +17,7 @@ class SRDiffTrainer:
         self.metrics_used = metrics_used
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_name = model_name
+        self.example_image = None
 
     def set_optimizer(self, optimizer):
         self.optimizer = optimizer
@@ -44,7 +45,7 @@ class SRDiffTrainer:
         return final_loss / len(train_dataloader)
 
     def save_model(self, save_dir):
-        utils.model_utils.save_model(self.model, f"{self}.pt", save_dir)
+        utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
 
     def validate(self, val_loader):
         self.model.eval()
