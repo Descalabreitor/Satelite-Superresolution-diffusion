@@ -6,12 +6,13 @@ import torch.nn.functional as F
 
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, model, steps, sample_steps):
+    def __init__(self, model, steps, sample_steps, losstype):
         super().__init__()
         # register environment variables
         self.train_steps = steps
         self.sample_steps = sample_steps
         self.model = model
+        self.losstype = losstype
 
         # register computation variables for training
         betas = torch.linspace(start=1e-4, end=0.005, steps=self.train_steps)
@@ -74,7 +75,13 @@ class GaussianDiffusion(nn.Module):
 
         x_t = torch.sqrt(gamma) * x_0 + torch.sqrt(1 - gamma) * epsilon
 
-        loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+        if self.losstype == 'l1':
+            loss = F.l1_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+
+        if self.losstype == "l2":
+            loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+        else:
+            raise NotImplementedError
 
         return loss
 

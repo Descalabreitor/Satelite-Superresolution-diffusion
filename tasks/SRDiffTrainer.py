@@ -90,7 +90,7 @@ class SRDiffTrainer:
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
-        img_sr, rrdb_out = self.model.sample(img_lr, img_bicubic, img_hr.shape, True)
+        img_sr, rrdb_out = self.model.sample(img_bicubic, img_hr.shape, True)
         for b in range(img_sr.shape[0]):
             metrics['n_samples'] += 1
             ssim = calculate_ssim(tensor2img(img_sr[b]), tensor2img(img_hr[b]))

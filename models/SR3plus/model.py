@@ -33,8 +33,8 @@ class UNet(nn.Module):
                 channels.append(in_channel)
 
         self.mid = nn.ModuleList([
-            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, attention=True, drp_rate=drp_rate),
-            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, attention=False, drp_rate=drp_rate)
+            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, use_attention=True, drp_rate=drp_rate),
+            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, use_attention=False, drp_rate=drp_rate)
         ])
 
         self.up = nn.ModuleList()
@@ -109,9 +109,9 @@ class GammaEmbedding(nn.Module):
 
 
 class WideResNetBlock(nn.Module):  # DDPM ResBlock
-    def __init__(self, in_channel, out_channel, emb_dimension, attention, drp_rate):
+    def __init__(self, in_channel, out_channel, emb_dimension, use_attention, drp_rate):
         super().__init__()
-        self.do_attention = False
+        self.use_attention = use_attention
         self.is_match = in_channel == out_channel
         self.C = out_channel
 
@@ -130,7 +130,7 @@ class WideResNetBlock(nn.Module):  # DDPM ResBlock
         if not self.is_match:  # to match 'channel' betweem 'x' and 'z'
             self.linear2 = Linear(in_channel, out_channel)
 
-        if self.do_attention:
+        if self.use_attention:
             self.att = SelfAttentionBlock(out_channel)
 
     def forward(self, x, emb):
@@ -155,7 +155,7 @@ class WideResNetBlock(nn.Module):  # DDPM ResBlock
 
         out = x + z
 
-        if self.do_attention:
+        if self.use_attention:
             out = self.att(out)
 
         return out

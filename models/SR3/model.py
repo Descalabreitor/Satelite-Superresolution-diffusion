@@ -4,8 +4,9 @@ import torch.nn.functional as F
 
 
 class UNet(nn.Module):
-    def __init__(self, C, steps, channel_expansions=[1, 2, 4, 4, 8, 8], emb_expansion=4, resblock_per_down_stage=3,
-                 drp_rate=0.0):  # from the original code; set 0.1 for CIFAR10 and 0.0 for the others.
+    def __init__(self, C, steps, channel_expansions=(1, 2, 4, 4, 8, 8), emb_expansion=4, resblock_per_down_stage=3,
+                 drp_rate=0.0, down_att=True, mid_att=(True, False),
+                 up_attn=True):  # from the original code; set 0.1 for CIFAR10 and 0.0 for the others.
         super().__init__()
         self.emb = GammaEmbedding(steps=steps, dim=C, exp=emb_expansion)
         self.conv1 = Conv2d(2 * 3, C, 3)
@@ -23,7 +24,7 @@ class UNet(nn.Module):
             out_channel = channel_expansions[d] * C
             for _ in range(resblock_per_down_stage):
                 res_block = WideResNetBlock(in_channel, out_channel, emb_dimension=emb_expansion * C,
-                                            attention=d == att_depth, drp_rate=drp_rate)
+                                            use_attention=down_att, drp_rate=drp_rate)
                 in_channel = out_channel
                 self.down.append(res_block)
                 channels.append(in_channel)
@@ -33,8 +34,10 @@ class UNet(nn.Module):
                 channels.append(in_channel)
 
         self.mid = nn.ModuleList([
-            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, attention=True, drp_rate=drp_rate),
-            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, attention=False, drp_rate=drp_rate)
+            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, use_attention=mid_att[0],
+                            drp_rate=drp_rate),
+            WideResNetBlock(in_channel, in_channel, emb_dimension=emb_expansion * C, use_attention=mid_att[1],
+                            drp_rate=drp_rate)
         ])
 
         self.up = nn.ModuleList()
@@ -42,7 +45,7 @@ class UNet(nn.Module):
             out_channel = channel_expansions[d] * C
             for _ in reversed(range(resblock_per_up_stage)):
                 res_block = WideResNetBlock(in_channel + channels.pop(), out_channel, emb_dimension=emb_expansion * C,
-                                            attention=d == att_depth, drp_rate=drp_rate)
+                                            use_attention=up_attn, drp_rate=drp_rate)
                 in_channel = out_channel
                 self.up.append(res_block)
 
@@ -90,7 +93,7 @@ class GammaEmbedding(nn.Module):
         self.linear2 = Linear(exp * dim, exp * dim)
         self.dim = dim
 
-        x = torch.log(torch.tensor(5000)**(self.dim // 2 - 1))  # log( 5000^(1 / (d/2 - 1)) )
+        x = torch.log(torch.tensor(5000) ** (self.dim // 2 - 1))  # log( 5000^(1 / (d/2 - 1)) )
         x = torch.exp(torch.arange(0, dim // 2) * -x)  # 1 / 5000^(i / (d/2 - 1))
         self.register_buffer('x', x.reshape((1, -1)))
 
@@ -109,9 +112,9 @@ class GammaEmbedding(nn.Module):
 
 
 class WideResNetBlock(nn.Module):  # DDPM ResBlock
-    def __init__(self, in_channel, out_channel, emb_dimension, attention, drp_rate):
+    def __init__(self, in_channel, out_channel, emb_dimension, use_attention, drp_rate):
         super().__init__()
-        self.do_attention = attention
+        self.use_attention = use_attention
         self.is_match = in_channel == out_channel
         self.C = out_channel
 
@@ -130,7 +133,7 @@ class WideResNetBlock(nn.Module):  # DDPM ResBlock
         if not self.is_match:  # to match 'channel' betweem 'x' and 'z'
             self.linear2 = Linear(in_channel, out_channel)
 
-        if self.do_attention:
+        if self.use_attention:
             self.att = SelfAttentionBlock(out_channel)
 
     def forward(self, x, emb):
@@ -155,7 +158,7 @@ class WideResNetBlock(nn.Module):  # DDPM ResBlock
 
         out = x + z
 
-        if self.do_attention:
+        if self.use_attention:
             out = self.att(out)
 
         return out
