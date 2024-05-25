@@ -61,3 +61,25 @@ class SR3Builder:
                      self.resbloks_downstage, self.drp_rate, self.down_att, self.mid_atts, self.up_att)
         diffusion = GaussianDiffusion(model, self.steps, self.sample_steps, self.losstype)
         return diffusion
+
+    def build_standart(self):
+        self.steps = 2000
+        self.sample_steps = 100
+        self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.drp_rate = 0
+        self.down_att = True
+        self.up_att = True
+        self.mid_atts = (True, False)
+        self.setlosstype = "l1"
+        return self.build()
+
+    def build_sr3plus(self):
+        self.steps = 20000
+        self.sample_steps = 1000
+        self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.drp_rate = 0
+        self.down_att = False
+        self.up_att = False
+        self.mid_atts = (False, False)
+        self.setlosstype = "l1"
+        return self.build()

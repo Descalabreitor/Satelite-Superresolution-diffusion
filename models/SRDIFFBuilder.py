@@ -5,9 +5,17 @@ from models.SRDiff.diffsr_modules import Unet, RRDBNet
 
 
 class SRDiffBuilder:
-    def set_size(self, size):
-        self.size = size
-        return self
+
+    def __init__(self):
+        self.losstype = None
+        self.aux_l1 = None
+        self.aux_perceptual = None
+        self.scale = None
+        self.dim_mults = None
+        self.timesteps = None
+        self.rrdb_blocks = None
+        self.rrdb_features = None
+        self.hidden = None
 
     def set_hidden(self, hidden):
         self.hidden = hidden
@@ -53,3 +61,15 @@ class SRDiffBuilder:
                                   aux_perceptual_loss=self.aux_perceptual)
 
         return model
+
+    def build_standart(self):
+        self.hidden = 64
+        self.dim_mults = [1, 2, 2, 4]
+        self.scale = 4
+        self.losstype = 'l1'
+        self.aux_l1 = False
+        self.aux_perceptual = False
+        self.rrdb_blocks = 8
+        self.rrdb_features = 32
+        self.timesteps = 100
+        return self.build()
