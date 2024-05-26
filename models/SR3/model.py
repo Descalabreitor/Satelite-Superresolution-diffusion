@@ -23,8 +23,12 @@ class UNet(nn.Module):
         for d in range(depth):
             out_channel = channel_expansions[d] * C
             for _ in range(resblock_per_down_stage):
-                res_block = WideResNetBlock(in_channel, out_channel, emb_dimension=emb_expansion * C,
-                                            use_attention=down_att, drp_rate=drp_rate)
+                if down_att:
+                    res_block = WideResNetBlock(in_channel, out_channel, emb_dimension=emb_expansion * C,
+                                            use_attention=d==att_depth, drp_rate=drp_rate)
+                else:
+                    res_block = WideResNetBlock(in_channel, out_channel, emb_dimension=emb_expansion * C,
+                                                use_attention=False, drp_rate=drp_rate)
                 in_channel = out_channel
                 self.down.append(res_block)
                 channels.append(in_channel)
@@ -44,8 +48,13 @@ class UNet(nn.Module):
         for d in reversed(range(depth)):
             out_channel = channel_expansions[d] * C
             for _ in reversed(range(resblock_per_up_stage)):
-                res_block = WideResNetBlock(in_channel + channels.pop(), out_channel, emb_dimension=emb_expansion * C,
-                                            use_attention=up_attn, drp_rate=drp_rate)
+                if up_attn:
+                    res_block = WideResNetBlock(in_channel + channels.pop(), out_channel, emb_dimension=emb_expansion * C,
+                                                use_attention=d==att_depth, drp_rate=drp_rate)
+                else:
+                    res_block = WideResNetBlock(in_channel + channels.pop(), out_channel,
+                                                emb_dimension=emb_expansion * C,
+                                                use_attention=d == att_depth, drp_rate=drp_rate)
                 in_channel = out_channel
                 self.up.append(res_block)
 

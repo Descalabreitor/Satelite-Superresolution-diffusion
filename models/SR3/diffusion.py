@@ -75,11 +75,12 @@ class GaussianDiffusion(nn.Module):
 
         x_t = torch.sqrt(gamma) * x_0 + torch.sqrt(1 - gamma) * epsilon
 
-        if self.losstype == 'l1':
+        if self.losstype == "l1":
             loss = F.l1_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
 
-        if self.losstype == "l2":
+        elif self.losstype == "l2":
             loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+
         else:
             raise NotImplementedError
 

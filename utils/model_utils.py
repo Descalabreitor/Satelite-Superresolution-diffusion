@@ -7,6 +7,7 @@ def save_model(model, model_file_name, models_dir):
     save_dir = os.path.join(models_dir, model_file_name)
     torch.save(model.state_dict(), save_dir)
 
+
 def load_model(model, model_file_name, models_dir):
     save_dir = os.path.join(models_dir, model_file_name)
     try:

@@ -27,7 +27,7 @@ class SR3Trainer:
     def set_scheduler(self, scheduler: torch.optim.lr_scheduler):
         self.scheduler = scheduler
 
-    def train(self, train_dataloader: torch.Dataloader):
+    def train(self, train_dataloader):
         final_loss = 0.0
         train_pbar = tqdm(train_dataloader, initial=0, total=len(train_dataloader), dynamic_ncols=True, unit='batch')
         for batch in train_pbar:
@@ -45,10 +45,10 @@ class SR3Trainer:
     def save_model(self, save_dir: str):
         utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
 
-    def validate(self, val_loader: torch.Dataloader):
+    def validate(self, val_dataloader):
         self.model.eval()
         final_loss = 0.0
-        val_pbar = tqdm(val_loader, initial=0, total=len(val_loader), dynamic_ncols=True, unit='batch')
+        val_pbar = tqdm(val_dataloader, initial=0, total=len(val_dataloader), dynamic_ncols=True, unit='batch')
 
         for batch in val_pbar:
             move_to_cuda(batch)
@@ -57,7 +57,7 @@ class SR3Trainer:
 
         return final_loss / len(val_pbar)
 
-    def training_step(self, batch: dict) -> torch.Lo:
+    def training_step(self, batch: dict):
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
@@ -65,7 +65,7 @@ class SR3Trainer:
         return loss
 
     @torch.no_grad()
-    def test(self, test_dataloader: torch.Dataloader) -> dict:
+    def test(self, test_dataloader) -> dict:
         self.model.eval()
         all_metrics = {metric: 0 for metric in self.metrics_used}
 

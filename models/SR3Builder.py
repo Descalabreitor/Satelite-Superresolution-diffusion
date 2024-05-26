@@ -62,27 +62,31 @@ class SR3Builder:
         diffusion = GaussianDiffusion(model, self.steps, self.sample_steps, self.losstype)
         return diffusion
 
-    def build_standart(self):
+    def set_standart(self):
         self.steps = 2000
         self.sample_steps = 100
         self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.emb_expansions = 4
+        self.resbloks_downstage = 3
         self.drp_rate = 0
         self.down_att = True
         self.up_att = True
         self.mid_atts = (True, False)
-        self.setlosstype = "l1"
-        return self.build()
+        self.losstype = "l2"
+        return self
 
-    def build_sr3plus(self):
+    def set_sr3plus(self):
         self.steps = 20000
         self.sample_steps = 1000
         self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.emb_expansions = 4
+        self.resbloks_downstage = 5
         self.drp_rate = 0
         self.down_att = False
         self.up_att = False
         self.mid_atts = (False, False)
-        self.setlosstype = "l1"
-        return self.build()
+        self.losstype = "l2"
+        return self
 
     def get_hyperparameters(self):
         hyperparameters = {
