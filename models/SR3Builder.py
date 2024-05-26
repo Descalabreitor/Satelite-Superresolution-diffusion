@@ -83,3 +83,18 @@ class SR3Builder:
         self.mid_atts = (False, False)
         self.setlosstype = "l1"
         return self.build()
+
+    def get_hyperparameters(self):
+        hyperparameters = {
+            "losstype": self.losstype,
+            "mid_atts": self.mid_atts,
+            "drp_rate": self.drp_rate,
+            "resbloks_downstage": self.resbloks_downstage,
+            "emb_expansions": self.emb_expansions,
+            "channels_expansions": self.channels_expansions,
+            "sample_steps": self.sample_steps,
+            "steps": self.steps,
+            "up_att": self.up_att,
+            "down_att": self.down_att
+        }
+        return hyperparameters

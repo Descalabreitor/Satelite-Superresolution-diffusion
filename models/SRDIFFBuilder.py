@@ -73,3 +73,17 @@ class SRDiffBuilder:
         self.rrdb_features = 32
         self.timesteps = 100
         return self.build()
+
+    def get_hyperparameters(self):
+        hyperparameters = {
+            "losstype": self.losstype,
+            "aux_l1": self.aux_l1,
+            "aux_perceptual": self.aux_perceptual,
+            "scale": self.scale,
+            "dim_mults": self.dim_mults,
+            "timesteps": self.timesteps,
+            "rrdb_blocks": self.rrdb_blocks,
+            "rrdb_features": self.rrdb_features,
+            "hidden": self.hidden
+        }
+        return hyperparameters

@@ -10,7 +10,7 @@ from utils.metrics_utils import *
 
 
 class SR3Trainer:
-    def __init__(self, metrics_used, model_name):
+    def __init__(self, metrics_used: tuple, model_name: str):
         self.scheduler = None
         self.optimizer = None
         self.model = None
@@ -18,16 +18,16 @@ class SR3Trainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model_name = model_name
 
-    def set_optimizer(self, optimizer):
+    def set_optimizer(self, optimizer: torch.optim.Optimizer):
         self.optimizer = optimizer
 
-    def set_model(self, model):
+    def set_model(self, model: torch.nn.Module):
         self.model = model
 
-    def set_scheduler(self, scheduler):
+    def set_scheduler(self, scheduler: torch.optim.lr_scheduler):
         self.scheduler = scheduler
 
-    def train(self, train_dataloader):
+    def train(self, train_dataloader: torch.Dataloader):
         final_loss = 0.0
         train_pbar = tqdm(train_dataloader, initial=0, total=len(train_dataloader), dynamic_ncols=True, unit='batch')
         for batch in train_pbar:
@@ -42,10 +42,10 @@ class SR3Trainer:
             self.scheduler.step()
         return final_loss / len(train_dataloader)
 
-    def save_model(self, save_dir):
+    def save_model(self, save_dir: str):
         utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
 
-    def validate(self, val_loader):
+    def validate(self, val_loader: torch.Dataloader):
         self.model.eval()
         final_loss = 0.0
         val_pbar = tqdm(val_loader, initial=0, total=len(val_loader), dynamic_ncols=True, unit='batch')
@@ -57,7 +57,7 @@ class SR3Trainer:
 
         return final_loss / len(val_pbar)
 
-    def training_step(self, batch):
+    def training_step(self, batch: dict) -> torch.Lo:
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
@@ -65,7 +65,7 @@ class SR3Trainer:
         return loss
 
     @torch.no_grad()
-    def test(self, test_dataloader):
+    def test(self, test_dataloader: torch.Dataloader) -> dict:
         self.model.eval()
         all_metrics = {metric: 0 for metric in self.metrics_used}
 
@@ -74,11 +74,11 @@ class SR3Trainer:
             move_to_cuda(batch)
             _, metrics = self.sample_test(batch)
             for metric in self.metrics_used:
-                all_metrics[metric] += metrics[metric]/metrics["n_samples"]
+                all_metrics[metric] += metrics[metric] / metrics["n_samples"]
         return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}
 
     @torch.no_grad()
-    def sample_test(self, batch):
+    def sample_test(self, batch: dict) -> (torch.Tensor, dict):
         metrics = {k: 0 for k in self.metrics_used}
         metrics['n_samples'] = 0
         img_hr = batch['hr']
@@ -94,6 +94,6 @@ class SR3Trainer:
         return img_sr, metrics
 
     @torch.no_grad()
-    def upscale_img(self, bicubic_img):
+    def upscale_img(self, bicubic_img: torch.Tensor) -> torch.Tensor:
         img_sr = self.model.sample(bicubic_img)
         return img_sr
