@@ -44,8 +44,11 @@ class SR3Trainer:
                 self.scheduler.step()
         return final_loss / len(train_dataloader)
 
-    def save_model(self, save_dir: str):
-        utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
+    def save_model(self, save_dir: str, ddpm: bool = False):
+        if ddpm:
+            utils.model_utils.save_model(self.model.module, f"{self.model_name}.pt", save_dir)
+        else:
+            utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
 
     def validate(self, val_dataloader):
         self.model.eval()
