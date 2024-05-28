@@ -1,6 +1,5 @@
 import math
 
-import cv2
 from torchvision.utils import make_grid
 import numpy as np
 import torch
@@ -51,26 +50,23 @@ def tensors_to_scalars(tensors):
     else:
         return tensors
 
-def move_to_cuda(batch, gpu_id=0):
+def move_to_cuda(batch, device):
     # base case: object can be directly moved using `cuda` or `to`
     if callable(getattr(batch, 'cuda', None)):
-        return batch.cuda(gpu_id, non_blocking=True)
+        return batch.cuda(device, non_blocking=True)
     elif callable(getattr(batch, 'to', None)):
-        return batch.to(torch.device('cuda', gpu_id), non_blocking=True)
+        return batch.to(device, non_blocking=True)
     elif isinstance(batch, list):
         for i, x in enumerate(batch):
-            batch[i] = move_to_cuda(x, gpu_id)
+            batch[i] = move_to_cuda(x, device)
         return batch
     elif isinstance(batch, tuple):
         batch = list(batch)
         for i, x in enumerate(batch):
-            batch[i] = move_to_cuda(x, gpu_id)
+            batch[i] = move_to_cuda(x, device)
         return tuple(batch)
     elif isinstance(batch, dict):
         for k, v in batch.items():
-            batch[k] = move_to_cuda(v, gpu_id)
+            batch[k] = move_to_cuda(v, device)
         return batch
     return batch
-
-def save_img(img, img_path, mode='RGB'):
-    cv2.imwrite(img_path, cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
