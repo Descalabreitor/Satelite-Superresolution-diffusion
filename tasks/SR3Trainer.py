@@ -33,7 +33,7 @@ class SR3Trainer:
         train_pbar = tqdm(train_dataloader, initial=0, total=len(train_dataloader), dynamic_ncols=True, unit='batch')
         for batch in train_pbar:
             self.model.train()
-            move_to_cuda(batch)
+            move_to_cuda(batch, device = self.device)
             loss = self.training_step(batch)
             loss.backward()
             final_loss += loss
@@ -54,7 +54,7 @@ class SR3Trainer:
         val_pbar = tqdm(val_dataloader, initial=0, total=len(val_dataloader), dynamic_ncols=True, unit='batch')
 
         for batch in val_pbar:
-            move_to_cuda(batch)
+            move_to_cuda(batch,self.device)
             losses = self.training_step(batch)
             final_loss += losses
 
@@ -74,7 +74,7 @@ class SR3Trainer:
 
         test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
-            move_to_cuda(batch)
+            move_to_cuda(batch, device=self.device)
             _, metrics = self.sample_test(batch)
             for metric in self.metrics_used:
                 all_metrics[metric] += metrics[metric]
