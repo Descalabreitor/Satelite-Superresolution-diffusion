@@ -6,7 +6,7 @@ import utils.model_utils
 from utils.model_utils import *
 from utils.tensor_utils import *
 from utils.logger_utils import *
-from utils.metrics_utils import *
+#from utils.metrics_utils import *
 
 
 class SR3Trainer:
@@ -33,15 +33,13 @@ class SR3Trainer:
         train_pbar = tqdm(train_dataloader, initial=0, total=len(train_dataloader), dynamic_ncols=True, unit='batch')
         for batch in train_pbar:
             self.model.train()
-            move_to_cuda(batch)
+            move_to_cuda(batch, device = self.device)
             loss = self.training_step(batch)
-            loss = loss / self.gradient_accumulation_steps
             loss.backward()
             final_loss += loss
-            if epoch % self.gradient_accumulation_steps == 0:
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-                self.scheduler.step()
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+            self.scheduler.step()
         return final_loss / len(train_dataloader)
 
     def save_model(self, save_dir: str, ddpm: bool = False):
@@ -56,7 +54,7 @@ class SR3Trainer:
         val_pbar = tqdm(val_dataloader, initial=0, total=len(val_dataloader), dynamic_ncols=True, unit='batch')
 
         for batch in val_pbar:
-            move_to_cuda(batch)
+            move_to_cuda(batch,self.device)
             losses = self.training_step(batch)
             final_loss += losses
 
@@ -76,28 +74,23 @@ class SR3Trainer:
 
         test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
-            move_to_cuda(batch)
+            move_to_cuda(batch, device=self.device)
             _, metrics = self.sample_test(batch)
-           # for metric in self.metrics_used:
-           #     all_metrics[metric] += metrics[metric] / metrics["n_samples"]
+            for metric in self.metrics_used:
+                all_metrics[metric] += metrics[metric]
+            test_pbar.set_postfix(**tensors_to_scalars(metrics))
         return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}
 
     @torch.no_grad()
     def sample_test(self, batch: dict) -> (torch.Tensor, dict):
         metrics = {k: 0 for k in self.metrics_used}
-        metrics['n_samples'] = 0
         img_hr = batch['hr']
         img_bicubic = batch['bicubic']
+        ssim = StructuralSimilarityIndexMeasure().to(device=self.device)
+        psnr = PeakSignalNoiseRatio().to(device=self.device)
         img_sr = self.model.sample(img_bicubic)
         metrics['psnr'] = psnr(img_sr, img_hr)
         metrics['ssim'] = ssim(img_sr, img_hr)
-        #for b in range(img_sr.shape[0]):
-        #    metrics['n_samples'] += 1
-        #    ssim = calculate_ssim(tensor2img(img_sr[b]), tensor2img(img_hr[b]))
-        #    psnr = calculate_psnr(tensor2img(img_sr[b]), tensor2img(img_hr[b]))
-        #    metrics['ssim'] += ssim
-        #    metrics['psnr'] += psnr
-
         return img_sr, metrics
 
     @torch.no_grad()
