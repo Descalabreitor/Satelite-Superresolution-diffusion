@@ -231,8 +231,9 @@ class GaussianDiffusion(nn.Module):
             it = tqdm(it, desc='sampling loop time step', total=self.num_timesteps)
         images = []
         for i in it:
+            full = torch.full((b,), i, device=device, dtype=torch.long)
             img, x_recon = self.p_sample(
-                img, torch.full((b,), i, device=device, dtype=torch.long), cond, img_lr_up)
+                img, full, cond, img_lr_up)
             if save_intermediate:
                 img_ = self.res2img(img, img_lr_up)
                 x_recon_ = self.res2img(x_recon, img_lr_up)
