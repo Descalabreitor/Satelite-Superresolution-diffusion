@@ -62,7 +62,7 @@ class SRDiffBuilder:
 
         return model
 
-    def build_standart(self):
+    def set_standart(self):
         self.hidden = 64
         self.dim_mults = [1, 2, 2, 4]
         self.scale = 4
@@ -72,7 +72,7 @@ class SRDiffBuilder:
         self.rrdb_blocks = 8
         self.rrdb_features = 32
         self.timesteps = 100
-        return self.build()
+        return self
 
     def get_hyperparameters(self):
         hyperparameters = {
