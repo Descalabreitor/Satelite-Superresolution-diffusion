@@ -21,6 +21,7 @@ class SRDiffTrainer:
         self.example_image = None
         self.aux_l1_loss = aux_l1_loss
         self.aux_ssim_loss = aux_ssim_loss
+        self.aux_ssim_loss = aux_ssim_loss
         self.aux_perceptual_loss = aux_perceptual_loss
         self.use_rrdb = use_rrdb
         self.fix_rrdb = fix_rrdb

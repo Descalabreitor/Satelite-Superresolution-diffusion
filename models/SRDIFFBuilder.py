@@ -74,6 +74,30 @@ class SRDiffBuilder:
         self.timesteps = 100
         return self
 
+    def set_small(self):
+        self.hidden = 32
+        self.dim_mults = [1, 2, 2, 4]
+        self.scale = 4
+        self.losstype = 'l1'
+        self.aux_l1 = False
+        self.aux_perceptual = False
+        self.rrdb_blocks = 4
+        self.rrdb_features = 16
+        self.timesteps = 100
+        return self
+
+    def set_large(self):
+        self.hidden = 96
+        self.dim_mults = [1, 2, 2, 4]
+        self.scale = 4
+        self.losstype = 'l1'
+        self.aux_l1 = False
+        self.aux_perceptual = False
+        self.rrdb_blocks = 10
+        self.rrdb_features = 48
+        self.timesteps = 100
+        return self
+
     def get_hyperparameters(self):
         hyperparameters = {
             "losstype": self.losstype,
