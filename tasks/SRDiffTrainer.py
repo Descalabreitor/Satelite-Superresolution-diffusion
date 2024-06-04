@@ -42,15 +42,12 @@ class SRDiffTrainer:
         for batch in train_pbar:
             self.model.train()
             move_to_cuda(batch, self.device)
-            losses, total_loss = self.training_step(batch, self.aux_ssim_loss, self.aux_perceptual_loss, self.use_rrdb,
-                                                    self.fix_rrdb)
+            losses, total_loss = self.training_step(batch)
+            self.optimizer.zero_grad()
             total_loss.backward()
             final_loss += total_loss
-
-            self.optimizer.zero_grad()
             self.optimizer.step()
             self.scheduler.step()
-
             train_pbar.set_postfix(**tensors_to_scalars(losses))
         return final_loss / len(train_dataloader)
 
@@ -64,21 +61,21 @@ class SRDiffTrainer:
 
         for batch in val_pbar:
             move_to_cuda(batch, self.device)
-            losses, total_loss = self.training_step(batch, self.aux_ssim_loss, self.aux_perceptual_loss, self.use_rrdb,
-                                                    self.fix_rrdb)
+            losses, total_loss = self.training_step(batch)
             val_pbar.set_postfix(**tensors_to_scalars(losses))
             final_loss += total_loss
 
+        #self.scheduler.step(metrics=final_loss / len(val_loader))
         return final_loss / len(val_pbar)
 
-    def training_step(self, batch, aux_ssim_loss, aux_perceptual_loss, use_rrdb, fix_rrdb):
+    def training_step(self, batch):
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
-        losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=use_rrdb, fix_rrdb=fix_rrdb,
-                                  aux_ssim_loss=aux_ssim_loss, aux_l1_loss=self.aux_l1_loss,
-                                  aux_percep_loss=aux_perceptual_loss)
-        total_loss = sum([value for value in losses.values()])
+        losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=self.use_rrdb, fix_rrdb=self.fix_rrdb,
+                                  aux_ssim_loss=self.aux_ssim_loss, aux_l1_loss=self.aux_l1_loss,
+                                  aux_percep_loss=self.aux_perceptual_loss)
+        total_loss = sum(losses.values())
         return losses, total_loss
 
     @torch.no_grad()
