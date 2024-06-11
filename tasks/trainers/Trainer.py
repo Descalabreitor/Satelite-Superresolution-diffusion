@@ -1,4 +1,5 @@
 import torch
+from torchmetrics.image import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 from tqdm import tqdm
 
 from utils.model_utils import save_model, load_model
@@ -94,9 +95,18 @@ class Trainer:
         sr = self.sample_test(images, get_metrics=False)
         return sr
 
+    def get_metrics(self, img_sr=None, img_hr=None):
+        metrics = {k: 0 for k in self.hyperparams["metrics_used"]}
+        ssim = StructuralSimilarityIndexMeasure().to(device=self.hyperparams["device"])
+        psnr = PeakSignalNoiseRatio().to(device=self.hyperparams["device"])
+        metrics['psnr'] = psnr(img_sr, img_hr)
+        metrics['ssim'] = ssim(img_sr, img_hr)
+        return img_sr, metrics
+
     @torch.no_grad()
     def sample_test(self, batch, get_metrics=True):
         raise NotImplementedError
+
 
     def training_step(self, batch):
         raise NotImplementedError

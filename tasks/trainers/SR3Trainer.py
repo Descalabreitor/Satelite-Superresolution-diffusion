@@ -32,15 +32,11 @@ class SR3Trainer(Trainer):
 
     @torch.no_grad()
     def sample_test(self, batch, get_metrics=True):
-        metrics = {k: 0 for k in self.metrics_used}
+
         img_hr = batch['hr']
         img_bicubic = batch['bicubic']
         img_sr = self.model.sample(img_bicubic)
         if get_metrics:
-            ssim = StructuralSimilarityIndexMeasure().to(device=self.hyperparams["device"])
-            psnr = PeakSignalNoiseRatio().to(device=self.hyperparams["device"])
-            metrics['psnr'] = psnr(img_sr, img_hr)
-            metrics['ssim'] = ssim(img_sr, img_hr)
-            return img_sr, metrics
+            return self.get_metrics(img_sr, img_hr)
         else:
             return img_sr
