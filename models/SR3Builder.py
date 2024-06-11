@@ -5,6 +5,7 @@ from models.SR3.model import UNet
 class SR3Builder:
 
     def __init__(self):
+        self.C = None
         self.losstype = None
         self.mid_atts = None
         self.drp_rate = None
@@ -56,8 +57,15 @@ class SR3Builder:
         self.losstype = losstype
         return self
 
+    def set_C(self, C):
+        self.C = C
+        return self
+
     def build(self):
-        model = UNet(3, self.steps, self.channels_expansions, self.emb_expansions,
+        if not self.C:
+            self.C = 3
+
+        model = UNet(self.C, self.steps, self.channels_expansions, self.emb_expansions,
                      self.resbloks_downstage, self.drp_rate, self.down_att, self.mid_atts, self.up_att)
         diffusion = GaussianDiffusion(model, self.steps, self.sample_steps, self.losstype)
         return diffusion
@@ -87,6 +95,21 @@ class SR3Builder:
         self.mid_atts = (False, False)
         self.losstype = "l2"
         return self
+
+    def set_papermodel(self):
+        self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.emb_expansions = 4
+        self.resbloks_downstage = 3
+        self.C = 128
+        self.steps = 1000
+        self.sample_steps = 100
+        self.losstype = "l2"
+        self.drp_rate = 0
+        self.down_att = True
+        self.up_att = True
+        self.mid_atts = (True, False)
+        return self
+
 
     def get_hyperparameters(self):
         hyperparameters = {

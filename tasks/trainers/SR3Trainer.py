@@ -28,7 +28,7 @@ class SR3Trainer(Trainer):
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
         loss = self.model(img_hr, img_bicubic)
-        return loss
+        return {"standart loss": loss}
 
     @torch.no_grad()
     def sample_test(self, batch, get_metrics=True):
