@@ -1,3 +1,4 @@
+from random import sample
 import numpy as np
 import torch
 from torch.utils.data import Dataset
@@ -24,7 +25,7 @@ class AerialDataset(Dataset):
 
         self.low_res_images = [os.path.join(lr_dir, image) for image in os.listdir(lr_dir)]
         self.high_res_images = [os.path.join(hr_dir, image) for image in os.listdir(hr_dir)]
-        self.sr_res_images = [os.path.join(bicubic_dir, image) for image in os.listdir(bicubic_dir)]
+        self.bicubic = [os.path.join(bicubic_dir, image) for image in os.listdir(bicubic_dir)]
 
     def __len__(self):
         return len(self.low_res_images)
@@ -34,7 +35,7 @@ class AerialDataset(Dataset):
         lr_image = PIL.Image.open(self.low_res_images[idx])
         hr_image = PIL.Image.open(self.high_res_images[idx])
         if np.random.random() >= self.aux_sat_prob:
-            bicubic_image = PIL.Image.open(self.sr_res_images[idx])
+            bicubic_image = PIL.Image.open(self.bicubic[idx])
         else:
             bicubic_image = PIL.Image.open(self.aux_sat_images[(idx * 8) + np.random.randint(0, 7)])
             #Hay 8 imagenes satelitales por cada imagen normal. Multiplicamos por 8 para ir a la primera equivalente
@@ -48,6 +49,10 @@ class AerialDataset(Dataset):
                 bicubic_image = transforms.ToTensor()(bicubic_image)
 
         return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}
+
+    def get_random_images(self, n_images):
+        idxs = sample(range(len(self.low_res_images)), n_images)
+        return [self.__getitem__(idx) for idx in idxs]
 
     def get_image_from_name(self, name):
         idx = self.get_idx_from_name(name)

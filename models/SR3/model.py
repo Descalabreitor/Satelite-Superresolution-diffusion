@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class UNet(nn.Module):
-    def __init__(self, C, steps, channel_expansions=(1, 2, 4, 4, 8, 8), emb_expansion=4, resblock_per_down_stage=3,
+    def __init__(self, C=3, steps=1000, channel_expansions=(1, 2, 4, 4, 8, 8), emb_expansion=4, resblock_per_down_stage=3,
                  drp_rate=0.0, down_att=True, mid_att=(True, False),
                  up_attn=True):  # from the original code; set 0.1 for CIFAR10 and 0.0 for the others.
         super().__init__()
