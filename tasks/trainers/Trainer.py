@@ -9,16 +9,12 @@ class Trainer:
 
     def __init__(self, hyperparams):
         self.hyperparams = hyperparams
-        self.device = self.hyperparams["device"]
-        self.metrics_used = self.hyperparams["metrics_used"]
         self.model = None
         self.optimizer = None
         self.scheduler = None
-        self.model_name = self.hyperparams["model_name"]
-        self.save_dir = self.hyperparams["save_dir"]
 
     def save_model(self):
-        save_model(self.model, f"{self.model_name}.pt", self.save_dir)
+        save_model(self.model, f"{self.hyperparams["model_name"]}.pt", self.hyperparams["save_dir"])
 
     def set_model(self, model):
         self.model = model
@@ -34,20 +30,31 @@ class Trainer:
         self.val_dataloader = val_dataloader
         self.test_dataloader = test_dataloader
 
-    def train_epoch(self):
+    def train_epoch(self, epoch):
         final_loss = 0.0
         train_pbar = tqdm(self.train_dataloader, initial=0, total=len(self.train_dataloader), dynamic_ncols=True,
                           unit='batch')
         for batch in train_pbar:
             self.model.train()
-            move_to_cuda(batch, self.device)
+            move_to_cuda(batch, self.hyperparams["device"])
             losses = self.training_step(batch)
             total_loss = sum(losses.values())
-            self.optimizer.zero_grad()
-            total_loss.backward()
+
+            if self.hyperparams["grad_acum"] > 0:
+                if epoch % self.hyperparams["grad_acum"] == 0:
+                    self.optimizer.zero_grad()
+                    total_loss.backward()
+                    self.optimizer.step()
+                    self.scheduler.step()
+                else:
+                    total_loss.backward()
+            else:
+                self.optimizer.zero_grad()
+                total_loss.backward()
+                self.optimizer.step()
+                self.scheduler.step()
+
             final_loss += total_loss
-            self.optimizer.step()
-            self.scheduler.step()
             train_pbar.set_postfix(**tensors_to_scalars(losses))
 
         return final_loss / len(self.train_dataloader)
@@ -60,7 +67,7 @@ class Trainer:
                         unit='batch')
 
         for batch in val_pbar:
-            move_to_cuda(batch, self.device)
+            move_to_cuda(batch, self.hyperparams["device"])
             losses, total_loss = self.training_step(batch)
             val_pbar.set_postfix(**tensors_to_scalars(losses))
             final_loss += total_loss
@@ -70,12 +77,12 @@ class Trainer:
     @torch.no_grad()
     def test(self, test_dataloader):
         self.model.eval()
-        all_metrics = {metric: 0 for metric in self.metrics_used}
+        all_metrics = {metric: 0 for metric in self.hyperparams["metrics_used"]}
         test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
-            move_to_cuda(batch, self.device)
+            move_to_cuda(batch, self.hyperparams["device"])
             _, metrics = self.sample_test(batch)
-            for metric in self.metrics_used:
+            for metric in self.hyperparams["metrics_used"]:
                 all_metrics[metric] += metrics[metric]
             test_pbar.set_postfix(**tensors_to_scalars(metrics))
         return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}

@@ -3,64 +3,27 @@ import torch
 from tqdm import tqdm
 from torchmetrics.image import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 import utils.model_utils
+from tasks.trainers.Trainer import Trainer
 from utils.model_utils import *
 from utils.tensor_utils import *
 from utils.logger_utils import *
 #from utils.metrics_utils import *
 
 
-class SR3Trainer:
-    def __init__(self, metrics_used: tuple, model_name: str, grad_acum=0):
-        self.scheduler = None
-        self.optimizer = None
-        self.model = None
-        self.metrics_used = metrics_used
-        self.gradient_accumulation_steps = grad_acum
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model_name = model_name
+class SR3Trainer(Trainer):
+    """"
+    Trainer for SR3 models
+    hyperparams needed:
+    - metrics_used
+    - model_name
+    - grad_acum if none put 0
+    - device
+    - save dir
+    """
+    def __init__(self, hyperparams):
+        super().__init__(hyperparams)
 
-    def set_optimizer(self, optimizer: torch.optim.Optimizer):
-        self.optimizer = optimizer
-
-    def set_model(self, model: torch.nn.Module):
-        self.model = model
-
-    def set_scheduler(self, scheduler: torch.optim.lr_scheduler):
-        self.scheduler = scheduler
-
-    def train(self, train_dataloader, epoch: int):
-        final_loss = 0.0
-        train_pbar = tqdm(train_dataloader, initial=0, total=len(train_dataloader), dynamic_ncols=True, unit='batch')
-        for batch in train_pbar:
-            self.model.train()
-            move_to_cuda(batch, device = self.device)
-            loss = self.training_step(batch)
-            loss.backward()
-            final_loss += loss
-            self.optimizer.step()
-            self.optimizer.zero_grad()
-            self.scheduler.step()
-        return final_loss / len(train_dataloader)
-
-    def save_model(self, save_dir: str, ddpm: bool = False):
-        if ddpm:
-            utils.model_utils.save_model(self.model.module, f"{self.model_name}.pt", save_dir)
-        else:
-            utils.model_utils.save_model(self.model, f"{self.model_name}.pt", save_dir)
-
-    def validate(self, val_dataloader):
-        self.model.eval()
-        final_loss = 0.0
-        val_pbar = tqdm(val_dataloader, initial=0, total=len(val_dataloader), dynamic_ncols=True, unit='batch')
-
-        for batch in val_pbar:
-            move_to_cuda(batch,self.device)
-            losses = self.training_step(batch)
-            final_loss += losses
-
-        return final_loss / len(val_pbar)
-
-    def training_step(self, batch: dict):
+    def training_step(self, batch):
         img_hr = batch['hr']
         img_lr = batch['lr']
         img_bicubic = batch['bicubic']
@@ -68,32 +31,16 @@ class SR3Trainer:
         return loss
 
     @torch.no_grad()
-    def test(self, test_dataloader) -> dict:
-        self.model.eval()
-        all_metrics = {metric: 0 for metric in self.metrics_used}
-
-        test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
-        for batch in test_pbar:
-            move_to_cuda(batch, device=self.device)
-            _, metrics = self.sample_test(batch)
-            for metric in self.metrics_used:
-                all_metrics[metric] += metrics[metric]
-            test_pbar.set_postfix(**tensors_to_scalars(metrics))
-        return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}
-
-    @torch.no_grad()
-    def sample_test(self, batch: dict) -> (torch.Tensor, dict):
+    def sample_test(self, batch, get_metrics=True):
         metrics = {k: 0 for k in self.metrics_used}
         img_hr = batch['hr']
         img_bicubic = batch['bicubic']
-        ssim = StructuralSimilarityIndexMeasure().to(device=self.device)
-        psnr = PeakSignalNoiseRatio().to(device=self.device)
         img_sr = self.model.sample(img_bicubic)
-        metrics['psnr'] = psnr(img_sr, img_hr)
-        metrics['ssim'] = ssim(img_sr, img_hr)
-        return img_sr, metrics
-
-    @torch.no_grad()
-    def upscale_img(self, bicubic_img: torch.Tensor) -> torch.Tensor:
-        img_sr = self.model.sample(bicubic_img)
-        return img_sr
+        if get_metrics:
+            ssim = StructuralSimilarityIndexMeasure().to(device=self.hyperparams["device"])
+            psnr = PeakSignalNoiseRatio().to(device=self.hyperparams["device"])
+            metrics['psnr'] = psnr(img_sr, img_hr)
+            metrics['ssim'] = ssim(img_sr, img_hr)
+            return img_sr, metrics
+        else:
+            return img_sr
