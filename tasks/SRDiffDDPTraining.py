@@ -80,8 +80,8 @@ if __name__ == '__main__':
     world_size = torch.cuda.device_count()
     hyperparams = {
         "lr": 0.00002,
-        "model_name": f"SRDiff Percp loss",
-        "epochs": 200,
+        "model_name": f"SRDiff loss",
+        "epochs": 1000,
         "eta_min": 1e-7,
         "num_workers":torch.cuda.device_count(),
         "mode": "min",

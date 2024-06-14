@@ -76,17 +76,17 @@ class Trainer:
         return final_loss / len(val_pbar)
 
     @torch.no_grad()
-    def test(self, test_dataloader):
+    def test(self):
         self.model.eval()
         all_metrics = {metric: 0 for metric in self.hyperparams["metrics_used"]}
-        test_pbar = tqdm(test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
+        test_pbar = tqdm(self.test_dataloader, initial=0, dynamic_ncols=True, unit='batch')
         for batch in test_pbar:
             move_to_cuda(batch, self.hyperparams["device"])
             _, metrics = self.sample_test(batch)
             for metric in self.hyperparams["metrics_used"]:
                 all_metrics[metric] += metrics[metric]
             test_pbar.set_postfix(**tensors_to_scalars(metrics))
-        return {metric: value / len(test_dataloader) for metric, value in all_metrics.items()}
+        return {metric: value / len(self.test_dataloader) for metric, value in all_metrics.items()}
 
     @torch.no_grad()
     def sample_visualization(self, n_images):
@@ -96,7 +96,7 @@ class Trainer:
         return sr
 
     def get_metrics(self, img_sr=None, img_hr=None):
-        metrics = {k: 0 for k in self.hyperparams["metrics_used"]}
+        metrics = {k: 0 for k in ("psnr", "ssim")}
         ssim = StructuralSimilarityIndexMeasure().to(device=self.hyperparams["device"])
         psnr = PeakSignalNoiseRatio().to(device=self.hyperparams["device"])
         metrics['psnr'] = psnr(img_sr, img_hr)

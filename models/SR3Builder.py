@@ -81,6 +81,7 @@ class SR3Builder:
         self.up_att = True
         self.mid_atts = (True, False)
         self.losstype = "l2"
+        self.C = 3
         return self
 
     def set_sr3plus(self):
@@ -100,7 +101,7 @@ class SR3Builder:
         self.channels_expansions = (1, 2, 4, 4, 8, 8)
         self.emb_expansions = 4
         self.resbloks_downstage = 3
-        self.C = 128
+        self.C = 54
         self.steps = 1000
         self.sample_steps = 100
         self.losstype = "l2"
@@ -110,6 +111,19 @@ class SR3Builder:
         self.mid_atts = (True, False)
         return self
 
+    def set_papersm(self):
+        self.channels_expansions = (1, 2, 4, 4, 8, 8)
+        self.emb_expansions = 4
+        self.resbloks_downstage = 3
+        self.C = 33
+        self.steps = 1000
+        self.sample_steps = 100
+        self.losstype = "l2"
+        self.drp_rate = 0
+        self.down_att = True
+        self.up_att = True
+        self.mid_atts = (True, False)
+        return self
 
     def get_hyperparameters(self):
         hyperparameters = {

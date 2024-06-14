@@ -2,7 +2,10 @@ import os
 
 import torch
 from torch.distributed import init_process_group
-from torch.utils.data import DataLoader, DistributedSampler
+from torch.utils.data import DataLoader, DistributedSampler, random_split
+from torchvision.transforms.v2 import Compose, RandomVerticalFlip, RandomHorizontalFlip
+
+from Dataset.AerialDataset import AerialDataset
 
 
 def ddp_setup(rank, world_size):
@@ -27,19 +30,19 @@ def set_up_data(hyperparams, dataset_dir, sat_dataset_dir, world_size):
     hr_size = 256
     dataset_dir = dataset_dir
 
-    transforms = Compose(
-        [RandomApply(transforms=[GaussianBlur(7)], p=0.5),
-         RandomEqualize()]
+    transforms = Compose([
+        RandomHorizontalFlip(0.2),
+        RandomVerticalFlip(0.2)]
     )
 
-    dataset = AerialDataset(dataset_dir, lr_size, hr_size, data_augmentation=None, aux_sat_prob=0.4,
+    dataset = AerialDataset(dataset_dir, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.4,
                             sat_dataset_path=sat_dataset_dir)
     train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
                                                             generator=torch.Generator().manual_seed(420))
 
-    train_dataloader = ddp_utils.prepare_data(train_dataset, hyperparams['batch_size'], world_size)
-    val_dataloader = ddp_utils.prepare_data(val_dataset, hyperparams['batch_size'], world_size)
-    test_dataloader = ddp_utils.prepare_data(test_dataset, hyperparams['batch_size'], world_size)
+    train_dataloader = prepare_data(train_dataset, hyperparams['batch_size'], world_size)
+    val_dataloader = prepare_data(val_dataset, hyperparams['batch_size'], world_size)
+    test_dataloader = prepare_data(test_dataset, hyperparams['batch_size'], world_size)
 
     return train_dataloader, val_dataloader, test_dataloader
 
