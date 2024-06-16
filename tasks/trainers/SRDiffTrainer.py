@@ -32,8 +32,7 @@ class SRDiffTrainer(Trainer):
         losses, _, _ = self.model(img_hr, img_lr, img_bicubic, use_rrdb=self.hyperparams["use_rrdb"], fix_rrdb=self.hyperparams["fix_rrdb"],
                                   aux_ssim_loss=self.hyperparams["aux_ssim_loss"], aux_l1_loss=self.hyperparams["aux_l1_loss"],
                                   aux_percep_loss=self.hyperparams["aux_perceptual_loss"])
-        total_loss = sum(losses.values())
-        return losses, total_loss
+        return losses
 
     @torch.no_grad()
     def sample_test(self, batch, get_metrics=True):

@@ -25,6 +25,7 @@ def prepare_data(dataset, batch_size, n_workers=2):
         sampler=DistributedSampler(dataset)
     )
 
+
 def set_up_data(hyperparams, dataset_dir, sat_dataset_dir, world_size):
     lr_size = 64
     hr_size = 256
@@ -45,4 +46,3 @@ def set_up_data(hyperparams, dataset_dir, sat_dataset_dir, world_size):
     test_dataloader = prepare_data(test_dataset, hyperparams['batch_size'], world_size)
 
     return train_dataloader, val_dataloader, test_dataloader
-

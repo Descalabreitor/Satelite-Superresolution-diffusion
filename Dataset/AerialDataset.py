@@ -42,10 +42,12 @@ class AerialDataset(Dataset):
             # y escogemos una aleatoria entre esas 8 sumando un número entre 0 y 7
         if not self.return_pil:
             lr_image = transforms.ToTensor()(lr_image)
-            hr_image = transforms.ToTensor()(hr_image)
+
             if self.data_augmentation:
+                hr_image = self.data_augmentation(transforms.ToTensor()(hr_image))
                 bicubic_image = self.data_augmentation(transforms.ToTensor()(bicubic_image))
             else:
+                hr_image = transforms.ToTensor()(hr_image)
                 bicubic_image = transforms.ToTensor()(bicubic_image)
 
         return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}

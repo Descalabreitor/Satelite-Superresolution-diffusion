@@ -14,8 +14,8 @@ class Trainer:
         self.optimizer = None
         self.scheduler = None
 
-    def save_model(self):
-        save_model(self.model, f"{self.hyperparams["model_name"]}.pt", self.hyperparams["save_dir"])
+    def save_model(self, epoch):
+        save_model(self.model, f"{self.hyperparams["model_name"]} Epoch{epoch}.pt", self.hyperparams["save_dir"])
 
     def set_model(self, model):
         self.model = model
@@ -46,14 +46,12 @@ class Trainer:
                     self.optimizer.zero_grad()
                     total_loss.backward()
                     self.optimizer.step()
-                    self.scheduler.step()
                 else:
                     total_loss.backward()
             else:
                 self.optimizer.zero_grad()
                 total_loss.backward()
                 self.optimizer.step()
-                self.scheduler.step()
 
             final_loss += total_loss
             train_pbar.set_postfix(**tensors_to_scalars(losses))
@@ -69,11 +67,12 @@ class Trainer:
 
         for batch in val_pbar:
             move_to_cuda(batch, self.hyperparams["device"])
-            losses, total_loss = self.training_step(batch)
+            losses = self.training_step(batch)
+            total_loss = sum(losses.values())
             val_pbar.set_postfix(**tensors_to_scalars(losses))
             final_loss += total_loss
-
-        return final_loss / len(val_pbar)
+        self.scheduler.step(final_loss / len(self.val_dataloader))
+        return final_loss / len(self.val_dataloader)
 
     @torch.no_grad()
     def test(self):
