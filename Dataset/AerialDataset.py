@@ -1,3 +1,4 @@
+import random
 from random import sample
 import numpy as np
 import torch
@@ -8,13 +9,12 @@ import PIL.Image
 
 
 class AerialDataset(Dataset):
-    def __init__(self, dataset_path, lr_size, hr_size, data_augmentation = None, aux_sat_prob = 0,
-                 sat_dataset_path = None, return_pil = False):
+    def __init__(self, dataset_path, lr_size, hr_size, data_augmentation=None, aux_sat_prob=0,
+                 sat_dataset_path=None):
         if not os.path.exists(dataset_path):
             raise FileNotFoundError(dataset_path)
 
         self.data_augmentation = data_augmentation
-        self.return_pil = return_pil
         self.dataset_path = dataset_path
         if aux_sat_prob > 0:
             self.aux_sat_images = [os.path.join(sat_dataset_path, image) for image in os.listdir(sat_dataset_path)]
@@ -40,17 +40,26 @@ class AerialDataset(Dataset):
             bicubic_image = PIL.Image.open(self.aux_sat_images[(idx * 8) + np.random.randint(0, 7)])
             #Hay 8 imagenes satelitales por cada imagen normal. Multiplicamos por 8 para ir a la primera equivalente
             # y escogemos una aleatoria entre esas 8 sumando un número entre 0 y 7
-        if not self.return_pil:
             lr_image = transforms.ToTensor()(lr_image)
 
-            if self.data_augmentation:
-                hr_image = self.data_augmentation(transforms.ToTensor()(hr_image))
-                bicubic_image = self.data_augmentation(transforms.ToTensor()(bicubic_image))
-            else:
-                hr_image = transforms.ToTensor()(hr_image)
-                bicubic_image = transforms.ToTensor()(bicubic_image)
+        if self.data_augmentation:
+            seed = np.random.randint(0, 2**10)
+            random.seed(seed)
+            lr_image = self.data_augmentation(lr_image)
+            random.seed(seed)
+            hr_image = self.data_augmentation(hr_image)
+            random.seed(seed)
+            bicubic_image = self.data_augmentation(bicubic_image)
+        bicubic_image, hr_image, lr_image = self.__toTensors(bicubic_image, hr_image, lr_image)
 
         return {'bicubic': bicubic_image, 'hr': hr_image, 'lr': lr_image}
+
+    @staticmethod
+    def __toTensors(bicubic_image, hr_image, lr_image):
+        hr_image = transforms.ToTensor()(hr_image)
+        bicubic_image = transforms.ToTensor()(bicubic_image)
+        lr_image = transforms.ToTensor()(lr_image)
+        return bicubic_image, hr_image, lr_image
 
     def get_random_images(self, n_images):
         idxs = sample(range(len(self.low_res_images)), n_images)

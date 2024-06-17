@@ -5,6 +5,7 @@ import wandb
 from tasks.trainers.SRDiffTrainer import SRDiffTrainer
 from models.SRDIFFBuilder import SRDiffBuilder
 from Dataset.StandartDaloader import setUpDataloaders
+from utils.model_utils import load_model
 from utils.tensor_utils import tensor2img, move_to_cuda
 
 
@@ -45,7 +46,7 @@ def execute(config):
     model, optimizer, scheduler, model_data = setUpTrainingObjects(config)
     model.to(config["device"])
     train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, "E:\\TFG\\dataset_tfg")
-
+    model = load_model(model, "SRDiff ver5 Epoch200.pt", config["save_dir"])
     trainer = SRDiffTrainer(config)
     trainer.set_model(model)
     trainer.set_optimizer(optimizer)
@@ -78,6 +79,7 @@ def execute(config):
 
     wandb.finish()
 
+
 if __name__ == "__main__":
     config = {
         'num_epochs': 1000,
@@ -94,10 +96,10 @@ if __name__ == "__main__":
         'batch_size': 10,
         'grad_acum': 1,
         "num_workers": 1,
-        "model_name": "SRDiff ver4",
+        "model_name": "SRDiff ver5",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 4",
+        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 5",
         "metrics_used": ("psnr", "ssim")
     }
     execute(config)
