@@ -2,6 +2,7 @@ import PIL.Image
 import torch
 import wandb
 
+import utils.logger_utils
 from tasks.trainers.SRDiffTrainer import SRDiffTrainer
 from models.SRDIFFBuilder import SRDiffBuilder
 from Dataset.StandartDaloader import setUpDataloaders
@@ -30,59 +31,74 @@ def buildOptimizer(config, model):
     return torch.optim.Adam(params, lr=config['lr'])
 
 
-def execute_check(config, test_dataloader, epoch, trainer, log_data):
+def execute_check(config, test_dataloader, epoch, trainer, log_data_wandb, log_data_local):
     trainer.save_model(epoch)
     visualization_batch = next(iter(test_dataloader))
     sr_images = trainer.sample_test(move_to_cuda(visualization_batch, device=config["device"]), get_metrics=False)
     sr_images = [PIL.Image.fromarray(tensor2img(tensor.to('cpu'))) for tensor in sr_images]
+    for id, image in enumerate(sr_images):
+        image.save(
+            f"C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\test pictures\\{config['model_name']}\\Epoch_{epoch}_{id}.png")
     metrics = trainer.test()
-    log_data["examples"] = [wandb.Image(image) for image in sr_images]
+    log_data_wandb["examples"] = [wandb.Image(image) for image in sr_images]
     for metric in metrics.keys():
-        log_data[metric] = metrics[metric]
-    return log_data
+        log_data_wandb[metric] = float(metrics[metric])
+        log_data_local[metric] = float(metrics[metric])
+
+    return log_data_wandb, log_data_local
 
 
 def execute(config):
     model, optimizer, scheduler, model_data = setUpTrainingObjects(config)
+
     model.to(config["device"])
     train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, "E:\\TFG\\dataset_tfg")
-    model = load_model(model, "SRDiff ver5 Epoch200.pt", config["save_dir"])
+    if config["start_epoch"] > 0:
+        model = load_model(model, f"{config['model_name']} Epoch{config["start_epoch"]}.pt", config["save_dir"])
+
     trainer = SRDiffTrainer(config)
     trainer.set_model(model)
     trainer.set_optimizer(optimizer)
     trainer.set_scheduler(scheduler)
     trainer.set_dataloaders(train_dataloader, val_dataloader, test_dataloader)
 
-    wandb.login()
-    wandb.init(project="SRDiff experiments", config=config.update(model_data), name=config['model_name'])
-
-    for epoch in range(config['num_epochs']):
-        log_data = {}
+    wandb.login(relogin=True, key="e13381c1bc10ba98afb7a152e624e1fc4d097e54")
+    wandb.init(project="SRDiff experiments", config=config.update(model_data),
+               name=config['model_name'] + f"_{config['start_epoch']}")
+    log_data_local = {}
+    for epoch in range(config["start_epoch"] + 1, config['num_epochs']):
+        log_data_wandb = {}
         with torch.no_grad():
             val_loss = trainer.validate()
-            log_data["val_loss"] = val_loss
+            log_data_wandb["val_loss"] = val_loss
+            log_data_local["val_loss"] = float(val_loss)
             torch.cuda.empty_cache()
 
         train_loss = trainer.train_epoch(epoch)
-        log_data["train_loss"] = train_loss
+        log_data_wandb["train_loss"] = train_loss
+        log_data_local["train_loss"] = float(train_loss)
         torch.cuda.empty_cache()
 
         if epoch % 100 == 0 and epoch != 0:
-            log_data = execute_check(config, test_dataloader, epoch, trainer, log_data)
-
-        wandb.log(log_data)
+            log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
+                                                           log_data_wandb, log_data_local)
+        log_data_local["epoch"] = epoch
+        utils.logger_utils.dict_to_csv(log_data_local,
+                                       "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\logs\\SRDIFF" +
+                                       config["model_name"])
+        wandb.log(log_data_wandb)
         torch.cuda.empty_cache()
 
-    log_data = {}
-    log_data = execute_check(config, test_dataloader, config["n_epochs"], trainer, log_data)
-    wandb.log(log_data)
+    log_data_wandb = {}
+    log_data_wandb = execute_check(config, test_dataloader, config["n_epochs"], trainer, log_data_wandb)
+    wandb.log(log_data_wandb)
 
     wandb.finish()
 
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 1000,
+        'num_epochs': 2000,
         'lr': 1e-6,
         'patience': 10,
         'factor': 0.1,
@@ -100,6 +116,7 @@ if __name__ == "__main__":
         "lr_size": 64,
         "hr_size": 256,
         "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 5",
-        "metrics_used": ("psnr", "ssim")
+        "metrics_used": ("psnr", "ssim"),
+        "start_epoch": 1000
     }
     execute(config)

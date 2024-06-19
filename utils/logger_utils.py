@@ -1,3 +1,4 @@
+import csv
 import os
 
 import torch
@@ -23,6 +24,16 @@ def metrics_to_scalars(metrics):
     return new_metrics
 
 
-def configure_wandb(project, hyperparams):
-    wandb.init(project=project, config=hyperparams)
-    wandb.log({"pinga": 10})
+def dict_to_csv(data, filename):
+    file_exists = os.path.isfile(filename)
+
+    with open(filename, 'a', newline='') as csvfile:
+        fieldnames = ['val_loss', 'train_loss', 'psnr', 'ssim', 'epoch']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        # Si el archivo no existe, escribe el encabezado
+        if not file_exists:
+            writer.writeheader()
+
+        # Escribe la fila de datos
+        writer.writerow(data)
