@@ -106,6 +106,5 @@ class Trainer:
     def sample_test(self, batch, get_metrics=True):
         raise NotImplementedError
 
-
     def training_step(self, batch):
         raise NotImplementedError

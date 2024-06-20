@@ -7,6 +7,7 @@ from models.SRDiff.diffsr_modules import Unet, RRDBNet
 class SRDiffBuilder:
 
     def __init__(self):
+        self.path_to_pretrained_rrdb = None
         self.losstype = None
         self.aux_l1 = None
         self.aux_perceptual = None
@@ -16,6 +17,7 @@ class SRDiffBuilder:
         self.rrdb_blocks = None
         self.rrdb_features = None
         self.hidden = None
+        self.grad_loss_weight = None
 
     def set_hidden(self, hidden):
         self.hidden = hidden
@@ -53,14 +55,17 @@ class SRDiffBuilder:
                           sr_scale=self.scale)
         rrdb = RRDBNet(3, 3, self.rrdb_features, self.rrdb_blocks, self.rrdb_features // 2)
 
+        if self.path_to_pretrained_rrdb:
+            rrdb.load_state_dict(torch.load(self.path_to_pretrained_rrdb))
+
         model = GaussianDiffusion(denoise_fn=denoise_fn,
-                                  rrdb_net=rrdb,
+                              rrdb_net=rrdb,
                                   timesteps=self.timesteps,
                                   loss_type=self.losstype,
                                   aux_l1_loss=self.aux_l1,
                                   aux_perceptual_loss=self.aux_perceptual)
 
-        return model
+        return model, rrdb
 
     def set_standart(self):
         self.hidden = 64
@@ -111,3 +116,7 @@ class SRDiffBuilder:
             "hidden": self.hidden
         }
         return hyperparameters
+
+    def use_pretrained_rrdb(self, path_to_pretrained_rrdb):
+        self.path_to_pretrained_rrdb = path_to_pretrained_rrdb
+        return self

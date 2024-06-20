@@ -4,15 +4,20 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from extra_losses.gradient_loss import GradientVariance
+
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, model, steps, sample_steps, losstype):
+    def __init__(self, model, steps, sample_steps, losstype, grad_loss_weight=0, patch_size=8):
         super().__init__()
         # register environment variables
+        self.grad_loss = None
         self.train_steps = steps
         self.sample_steps = sample_steps
         self.model = model
         self.losstype = losstype
+        self.grad_loss_weight = grad_loss_weight
+        self.patch_size = patch_size
 
         # register computation variables for training
         betas = torch.linspace(start=1e-4, end=0.005, steps=self.train_steps)
@@ -27,6 +32,9 @@ class GaussianDiffusion(nn.Module):
         self.register_buffer("sample_betas_over_sqrt_one_minus_alphas_bar",
                              sample_betas / torch.sqrt(1. - self.sample_alphas_bar))
         self.register_buffer("sample_sigmas", torch.sqrt(sample_betas))
+
+    def configure_grad_loss(self, device):
+        self.grad_loss = GradientVariance(patch_size=self.patch_size).to(device)
 
     def _extract(self, values, times, dimension_num):
         B, *_ = times.shape
@@ -74,15 +82,11 @@ class GaussianDiffusion(nn.Module):
         epsilon = torch.randn_like(x_0, device=x_0.device)
 
         x_t = torch.sqrt(gamma) * x_0 + torch.sqrt(1 - gamma) * epsilon
-        loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
-        #if self.losstype == "l1":
-        #    loss = F.l1_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
-
-        #elif self.losstype == "l2":
-        #    loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
-
-        #else:
-        #    raise NotImplementedError
+        output = self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma))
+        loss = F.mse_loss(output, epsilon, reduction='mean')
+        if self.grad_loss > 0:
+            grad_loss = self.grad_loss_weight * self.grad_loss(output, epsilon)
+            loss += grad_loss
 
         return loss
 

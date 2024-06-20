@@ -64,7 +64,7 @@ def cosine_beta_schedule(timesteps, s=0.008):
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, denoise_fn, rrdb_net, aux_perceptual_loss, aux_l1_loss=False, timesteps=1000, loss_type='l1',
-                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02, grad_loss_weight = 0, patch_size = 8
+                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02, grad_loss_weight=0, patch_size=8
                  ):
         super().__init__()
         self.denoise_fn = denoise_fn
@@ -154,7 +154,7 @@ class GaussianDiffusion(nn.Module):
         return model_mean, posterior_variance, posterior_log_variance, x_recon
 
     def forward(self, img_hr, img_lr, img_lr_up, use_rrdb, fix_rrdb,
-                aux_ssim_loss, aux_l1_loss, aux_percep_loss ,t=None, *args, **kwargs):
+                aux_ssim_loss, aux_l1_loss, aux_percep_loss, t=None, *args, **kwargs):
         x = img_hr
         b, *_, device = *x.shape, x.device
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long() \
@@ -208,9 +208,9 @@ class GaussianDiffusion(nn.Module):
         t_cond = (t[:, None, None, None] >= 0).float()
         t = t.clamp_min(0)
         return (
-                       extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
-                       extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
-               ) * t_cond + x_start * (1 - t_cond)
+                extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
+                extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
+        ) * t_cond + x_start * (1 - t_cond)
 
     @torch.no_grad()
     def p_sample(self, x, t, cond, img_lr_up, noise_pred=None, clip_denoised=True, repeat_noise=False):

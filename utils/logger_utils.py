@@ -1,4 +1,5 @@
 import csv
+import json
 import os
 
 import torch
@@ -37,3 +38,16 @@ def dict_to_csv(data, filename):
 
         # Escribe la fila de datos
         writer.writerow(data)
+
+
+def log_config(config, model_type):
+    logged_config = config
+    with open(
+            f"{config["project_root"]}\\logs\\{model_type}\\config_{config["model_name"]}.json",
+            "w") as archivo:
+        if config["device"] == torch.device("cuda"):
+            logged_config["device"] = "cuda"
+        else:
+            logged_config["device"] = "cpu"
+
+        json.dump(logged_config, archivo, indent=4)
