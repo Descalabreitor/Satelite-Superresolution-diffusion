@@ -55,7 +55,7 @@ def execute(config):
     model, optimizer, scheduler, model_data = setUpTrainingObjects(config)
 
     model.to(config["device"])
-    train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, "E:\\TFG\\dataset_tfg")
+    train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, config['dataset_path'])
     if config["start_epoch"] > 0:
         model = load_model(model, f"{config['model_name']} Epoch{config["start_epoch"]}.pt", config["save_dir"])
 
@@ -90,8 +90,7 @@ def execute(config):
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
         utils.logger_utils.dict_to_csv(log_data_local,
-                                       "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\logs\\SRDIFF" +
-                                       config["model_name"])
+                                       f"{config["project_root"]}\\logs\\SRDIFF\\{config["model_name"]}")
         wandb.log(log_data_wandb)
         torch.cuda.empty_cache()
 
@@ -104,7 +103,7 @@ def execute(config):
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 2000,
+        'num_epochs': 1000,
         'lr': 1e-6,
         'patience': 10,
         'factor': 0.1,

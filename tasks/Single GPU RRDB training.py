@@ -75,6 +75,7 @@ def execute(config):
         if epoch % 100 == 0 and epoch != 0:
             log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
                                                            log_data_wandb, log_data_local)
+
         log_data_local["epoch"] = epoch
         logger_utils.dict_to_csv(log_data_local,
                                  f"{config["project_root"]}\\logs\\RRDB\\{config["model_name"]}")
@@ -102,7 +103,7 @@ if __name__ == '__main__':
         "model_name": "RRDB pretrained",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 6",
+        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\RRDB",
         "metrics_used": ("psnr", "ssim"),
         "start_epoch": 0,
         "dataset_path": "E:\\TFG\\dataset_tfg",
