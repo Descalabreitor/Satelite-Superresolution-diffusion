@@ -15,7 +15,7 @@ from utils.tensor_utils import tensor2img, move_to_cuda
 def setUpTrainingObjects(config):
     model_builder = SRDiffBuilder()
     model_builder = model_builder.set_standart()
-    model_builder = model_builder.set_grad_loss_weight(config['grad_loss_weight'])
+    model_builder = model_builder.use_pretrained_rrdb(config['pretrained_rrdb'])
     model, _ = model_builder.build()
 
     optimizer = buildOptimizer(config, model)
@@ -68,8 +68,7 @@ def execute(config):
     wandb.login(relogin=True, key="e13381c1bc10ba98afb7a152e624e1fc4d097e54")
     wandb.init(project="SRDiff experiments", config=config.update(model_data),
                name=config['model_name'] + f"_{config['start_epoch']}")
-    with open(f"C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\logs\\SRDIFF\\config_{config["model_name"]}.json", "w") as archivo:
-        json.dump(config, archivo, indent=4)
+    utils.logger_utils.log_config(config, "SRDIFF")
 
     log_data_local = {}
     for epoch in range(config["start_epoch"] + 1, config['num_epochs']+1):
@@ -121,8 +120,11 @@ if __name__ == "__main__":
         "lr_size": 64,
         "hr_size": 256,
         "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 6",
+        "project_root":"C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking",
+        "dataset_path":"E:\\TFG\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
         "start_epoch": 0,
-        "grad_loss_weight": 0.1
+        "grad_loss_weight": 0.1,
+        "pretrained_rrdb": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt"
     }
     execute(config)
