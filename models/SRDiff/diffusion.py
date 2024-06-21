@@ -6,6 +6,8 @@ from torch import nn
 from tqdm import tqdm
 from .module_util import default
 from .SRDiff_utils import SSIM, PerceptualLoss
+from .. import common
+from ..common import cosine_beta_schedule
 
 
 # gaussian diffusion trainer class
@@ -45,20 +47,6 @@ def get_beta_schedule(num_diffusion_timesteps, beta_schedule='linear', beta_star
         raise NotImplementedError(beta_schedule)
     assert betas.shape == (num_diffusion_timesteps,)
     return betas
-
-
-def cosine_beta_schedule(timesteps, s=0.008):
-    """
-    cosine schedule
-    as proposed in https://openreview.net/forum?id=-NEXDKk8gZ
-    """
-    steps = timesteps + 1
-    x = np.linspace(0, steps, steps)
-    alphas_cumprod = np.cos(((x / steps) + s) / (1 + s) * np.pi * 0.5) ** 2
-    alphas_cumprod = alphas_cumprod / alphas_cumprod[0]
-    betas = 1 - (alphas_cumprod[1:] / alphas_cumprod[:-1])
-    return np.clip(betas, a_min=0, a_max=0.999)
-
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, denoise_fn, rrdb_net, aux_perceptual_loss, aux_l1_loss=False, timesteps=1000, loss_type='l1',

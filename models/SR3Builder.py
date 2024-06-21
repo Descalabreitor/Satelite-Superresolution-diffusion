@@ -5,6 +5,7 @@ from models.SR3.model import UNet
 class SR3Builder:
 
     def __init__(self):
+        self.beta_schedule = None
         self.C = None
         self.losstype = None
         self.mid_atts = None
@@ -61,13 +62,17 @@ class SR3Builder:
         self.C = C
         return self
 
+    def set_beta_schedule(self, beta_schedule):
+        self.beta_schedule = beta_schedule
+        return self
+
     def build(self):
         if not self.C:
             self.C = 3
 
         model = UNet(self.C, self.steps, self.channels_expansions, self.emb_expansions,
                      self.resbloks_downstage, self.drp_rate, self.down_att, self.mid_atts, self.up_att)
-        diffusion = GaussianDiffusion(model, self.steps, self.sample_steps, self.losstype)
+        diffusion = GaussianDiffusion(model, self.steps, self.sample_steps, self.losstype, beta_schedule=self.beta_schedule)
         return diffusion
 
     def set_standart(self):
@@ -82,6 +87,7 @@ class SR3Builder:
         self.mid_atts = (True, False)
         self.losstype = "l2"
         self.C = 3
+        self.beta_schedule = "linear"
         return self
 
     def set_sr3plus(self):
@@ -95,6 +101,7 @@ class SR3Builder:
         self.up_att = False
         self.mid_atts = (False, False)
         self.losstype = "l2"
+        self.beta_schedule = "linear"
         return self
 
     def set_papermodel(self):
@@ -109,6 +116,7 @@ class SR3Builder:
         self.down_att = True
         self.up_att = True
         self.mid_atts = (True, False)
+        self.beta_schedule = "linear"
         return self
 
     def set_papersm(self):
@@ -123,6 +131,7 @@ class SR3Builder:
         self.down_att = True
         self.up_att = True
         self.mid_atts = (True, False)
+        self.beta_schedule = "linear"
         return self
 
     def get_hyperparameters(self):

@@ -4,9 +4,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from models import common
+
 
 class GaussianDiffusion(nn.Module):
-    def __init__(self, model, steps, sample_steps, losstype):
+    def __init__(self, model, steps, sample_steps, losstype, beta_schedule="cosine"):
         super().__init__()
         # register environment variables
         self.train_steps = steps
@@ -15,12 +17,19 @@ class GaussianDiffusion(nn.Module):
         self.losstype = losstype
 
         # register computation variables for training
-        betas = torch.linspace(start=1e-4, end=0.005, steps=self.train_steps)
+        if beta_schedule == "cosine":
+            betas = common.cosine_beta_schedule(self.train_steps, s=1e-4)
+            sample_betas = common.cosine_beta_schedule(self.sample_steps, s=1e-4)
+            betas = torch.tensor(betas, dtype=torch.float32)
+            sample_betas = torch.tensor(sample_betas, dtype=torch.float32)
+        elif beta_schedule == "linear":
+            betas = torch.linspace(start=1e-4, end=0.005, steps=self.train_steps)
+            sample_betas = torch.linspace(start=1e-4, end=0.1, steps=self.sample_steps)
+
         alphas = 1. - betas
         self.register_buffer("alphas_bar", torch.cumprod(alphas, dim=0))
 
         # register computation variables for sampling
-        sample_betas = torch.linspace(start=1e-4, end=0.1, steps=self.sample_steps)
         sample_alphas = 1. - sample_betas
         self.register_buffer("sample_alphas_bar", torch.cumprod(sample_alphas, dim=0))
         self.register_buffer("sample_one_over_sqrt_alphas", torch.sqrt(1. / sample_alphas))
@@ -74,7 +83,8 @@ class GaussianDiffusion(nn.Module):
         epsilon = torch.randn_like(x_0, device=x_0.device)
 
         x_t = torch.sqrt(gamma) * x_0 + torch.sqrt(1 - gamma) * epsilon
-        loss = F.mse_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
+        output = self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma))
+        loss = F.mse_loss(output, epsilon, reduction='mean')
         #if self.losstype == "l1":
         #    loss = F.l1_loss(self.model(torch.cat((x_t, x_c), dim=1), torch.sqrt(gamma)), epsilon, reduction='mean')
 
