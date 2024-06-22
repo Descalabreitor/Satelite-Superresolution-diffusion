@@ -172,6 +172,10 @@ class GaussianDiffusion(nn.Module):
         x = self.img2res(x, img_lr_up)
         p_losses, x_tp1, noise_pred, x_t, x_t_gt, x_0 = self.p_losses(x, t, cond, img_lr_up, *args, **kwargs)
         ret = {'q': p_losses}
+
+        recon_loss = self.recon_loss(x_0, img_hr)
+        ret['recon_loss'] = recon_loss
+
         if not fix_rrdb:
             if aux_l1_loss:
                 ret['aux_l1'] = F.l1_loss(rrdb_out, img_hr)
@@ -184,6 +188,9 @@ class GaussianDiffusion(nn.Module):
         x_t = self.res2img(x_t, img_lr_up)
         x_t_gt = self.res2img(x_t_gt, img_lr_up)
         return ret, (x_tp1, x_t_gt, x_t), t
+
+    def recon_loss(self, x_0, img_hr):
+        return F.l1_loss(x_0, img_hr)
 
     def p_losses(self, x_start, t, cond, img_lr_up, noise=None):
         noise = default(noise, lambda: torch.randn_like(x_start))

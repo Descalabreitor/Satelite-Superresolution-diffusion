@@ -41,7 +41,7 @@ def execute_check(config, test_dataloader, epoch, trainer, log_data_wandb, log_d
     sr_images = [PIL.Image.fromarray(tensor2img(tensor.to('cpu'))) for tensor in sr_images]
     for id, image in enumerate(sr_images):
         image.save(
-            f"C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\test pictures\\{config['model_name']}\\Epoch_{epoch}_{id}.png")
+            f"{config["project_root"]}\\test pictures\\{config['model_name']}\\Epoch_{epoch}_{id}.png")
     metrics = trainer.test()
     log_data_wandb["examples"] = [wandb.Image(image) for image in sr_images]
     for metric in metrics.keys():
@@ -52,6 +52,7 @@ def execute_check(config, test_dataloader, epoch, trainer, log_data_wandb, log_d
 
 
 def execute(config):
+    torch.backends.cudnn.benchmark = True
     model, optimizer, scheduler, model_data = setUpTrainingObjects(config)
 
     model.to(config["device"])
@@ -113,18 +114,18 @@ if __name__ == "__main__":
         "aux_ssim_loss": False,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 10,
+        'batch_size': 29,
         'grad_acum': 1,
         "num_workers": 1,
         "model_name": "SRDiff ver6",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SRDiff\\version 6",
-        "project_root":"C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking",
-        "dataset_path":"E:\\TFG\\dataset_tfg",
+        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 6",
+        "project_root":"C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+        "dataset_path":"C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
-        "start_epoch": 0,
+        "start_epoch": 700,
         "grad_loss_weight": 0.1,
-        "pretrained_rrdb": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt"
+        "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt"
     }
     execute(config)

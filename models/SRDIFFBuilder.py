@@ -56,7 +56,11 @@ class SRDiffBuilder:
         rrdb = RRDBNet(3, 3, self.rrdb_features, self.rrdb_blocks, self.rrdb_features // 2)
 
         if self.path_to_pretrained_rrdb:
-            rrdb.load_state_dict(torch.load(self.path_to_pretrained_rrdb))
+            try:
+                rrdb.load_state_dict(torch.load(self.path_to_pretrained_rrdb))
+            except Exception as e:
+                print(e)
+
 
         model = GaussianDiffusion(denoise_fn=denoise_fn,
                               rrdb_net=rrdb,
