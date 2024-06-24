@@ -79,15 +79,7 @@ class GaussianDiffusion(nn.Module):
         self.conditional = conditional
         if schedule_opt is not None:
             pass
-            # self.set_new_noise_schedule(schedule_opt)
-
-    def set_loss(self, device):
-        if self.loss_type == 'l1':
-            self.loss_func = nn.L1Loss(reduction='sum').to(device)
-        elif self.loss_type == 'l2':
-            self.loss_func = nn.MSELoss(reduction='sum').to(device)
-        else:
-            raise NotImplementedError()
+            self.set_new_noise_schedule(schedule_opt, torch.device('cuda' if torch.cuda.is_available() else 'cpu'))
 
     def set_new_noise_schedule(self, schedule_opt, device):
         to_torch = partial(torch.tensor, dtype=torch.float32, device=device)
@@ -192,8 +184,8 @@ class GaussianDiffusion(nn.Module):
             ret_img = x
             for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
                 img = self.p_sample(img, i, condition_x=x)
-                if i % sample_inter == 0:
-                    ret_img = torch.cat([ret_img, img], dim=0)
+                #if i % sample_inter == 0:
+                #    ret_img = torch.cat([ret_img, img], dim=0)
         if continous:
             return ret_img
         else:
@@ -206,7 +198,7 @@ class GaussianDiffusion(nn.Module):
         return self.p_sample_loop((batch_size, channels, image_size, image_size), continous)
 
     @torch.no_grad()
-    def super_resolution(self, x_in, continous=False):
+    def super_resolution(self, x_in, continous=True):
         return self.p_sample_loop(x_in, continous)
 
     def q_sample(self, x_start, continuous_sqrt_alpha_cumprod, noise=None):
@@ -219,7 +211,7 @@ class GaussianDiffusion(nn.Module):
         )
 
     def p_losses(self, x_in, noise=None):
-        x_start = x_in['HR']
+        x_start = x_in['hr']
         [b, c, h, w] = x_start.shape
         t = np.random.randint(1, self.num_timesteps + 1)
         continuous_sqrt_alpha_cumprod = torch.FloatTensor(
@@ -240,9 +232,9 @@ class GaussianDiffusion(nn.Module):
             x_recon = self.denoise_fn(x_noisy, continuous_sqrt_alpha_cumprod)
         else:
             x_recon = self.denoise_fn(
-                torch.cat([x_in['SR'], x_noisy], dim=1), continuous_sqrt_alpha_cumprod)
+                torch.cat([x_in['bicubic'], x_noisy], dim=1), continuous_sqrt_alpha_cumprod)
 
-        loss = self.loss_func(noise, x_recon)
+        loss = F.l1_loss(noise, x_recon)
         return loss
 
     def forward(self, x, *args, **kwargs):
