@@ -15,6 +15,7 @@ from utils.tensor_utils import tensor2img, move_to_cuda
 def setUpTrainingObjects(config):
     model_builder = SRDiffBuilder()
     model_builder = model_builder.set_standart()
+    model_builder = model_builder.set_timesteps(200) #Doblamos los pasos
     model_builder = model_builder.use_pretrained_rrdb(config['pretrained_rrdb'])
     model, _ = model_builder.build()
 
@@ -85,7 +86,7 @@ def execute(config):
         log_data_local["train_loss"] = float(train_loss)
         torch.cuda.empty_cache()
 
-        if epoch % 100 == 0 and epoch != 0:
+        if epoch % 50 == 0 and epoch != 0:
             log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
@@ -103,9 +104,9 @@ def execute(config):
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 1000,
-        'lr': 1e-6,
-        'patience': 10,
+        'num_epochs': 300,
+        'lr': 1e-4,
+        'patience': 5,
         'factor': 0.1,
         'fix_rrdb': True,
         'use_rrdb': True,
@@ -114,18 +115,17 @@ if __name__ == "__main__":
         "aux_ssim_loss": False,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 29,
+        'batch_size': 25,
         'grad_acum': 1,
         "num_workers": 1,
-        "model_name": "SRDiff ver6",
+        "model_name": "SRDiff ver9",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 6",
+        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 9",
         "project_root":"C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
         "dataset_path":"C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
-        "start_epoch": 700,
-        "grad_loss_weight": 0.1,
-        "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt"
+        "start_epoch": 0,
+        "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt",
     }
     execute(config)

@@ -64,16 +64,14 @@ def cosine_beta_schedule(timesteps, s=0.008):
 
 class GaussianDiffusion(nn.Module):
     def __init__(self, denoise_fn, rrdb_net, aux_perceptual_loss, aux_l1_loss=False, timesteps=1000, loss_type='l1',
-                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02, grad_loss_weight = 0, patch_size = 8
-                 ):
+                 beta_schedule='cosine', beta_start=0.0001, beta_end=0.02, recon_loss_w=0.2):
         super().__init__()
         self.denoise_fn = denoise_fn
         # condition net
         self.rrdb = rrdb_net
         self.ssim_loss = SSIM(window_size=11)
 
-        self.grad_loss_weight = grad_loss_weight
-        self.patch_size = patch_size
+        self.recon_loss_w = recon_loss_w
 
         if aux_perceptual_loss:
             self.percep_loss_fn = [PerceptualLoss()]
@@ -154,7 +152,7 @@ class GaussianDiffusion(nn.Module):
         return model_mean, posterior_variance, posterior_log_variance, x_recon
 
     def forward(self, img_hr, img_lr, img_lr_up, use_rrdb, fix_rrdb,
-                aux_ssim_loss, aux_l1_loss, aux_percep_loss ,t=None, *args, **kwargs):
+                aux_ssim_loss, aux_l1_loss, aux_percep_loss, t=None, *args, **kwargs):
         x = img_hr
         b, *_, device = *x.shape, x.device
         t = torch.randint(0, self.num_timesteps, (b,), device=device).long() \
@@ -170,11 +168,12 @@ class GaussianDiffusion(nn.Module):
             rrdb_out = img_lr_up
             cond = img_lr
         x = self.img2res(x, img_lr_up)
-        p_losses, x_tp1, noise_pred, x_t, x_t_gt, x_0 = self.p_losses(x, t, cond, img_lr_up, *args, **kwargs)
-        ret = {'q': p_losses}
+        p_losses, x_tp1, noise_pred, x_t, x_t_gt, x_0, noise_real = self.p_losses(x, t, cond, img_lr_up, *args,
+                                                                                  **kwargs)
+        ret = {'q': (1 - self.recon_loss_w) * p_losses}
 
         recon_loss = self.recon_loss(x_0, img_hr)
-        ret['recon_loss'] = recon_loss
+        ret['recon_loss'] = recon_loss * self.recon_loss_w
 
         if not fix_rrdb:
             if aux_l1_loss:
@@ -183,6 +182,7 @@ class GaussianDiffusion(nn.Module):
                 ret['aux_ssim'] = 1 - self.ssim_loss(rrdb_out, img_hr)
             if aux_percep_loss:
                 ret['aux_percep'] = self.percep_loss_fn[0](img_hr, rrdb_out)
+
         # x_recon = self.res2img(x_recon, img_lr_up)
         x_tp1 = self.res2img(x_tp1, img_lr_up)
         x_t = self.res2img(x_t, img_lr_up)
@@ -208,16 +208,16 @@ class GaussianDiffusion(nn.Module):
             loss = loss + (1 - self.ssim_loss(noise, noise_pred))
         else:
             raise NotImplementedError()
-        return loss, x_tp1_gt, noise_pred, x_t_pred, x_t_gt, x0_pred
+        return loss, x_tp1_gt, noise_pred, x_t_pred, x_t_gt, x0_pred, noise
 
     def q_sample(self, x_start, t, noise=None):
         noise = default(noise, lambda: torch.randn_like(x_start))
         t_cond = (t[:, None, None, None] >= 0).float()
         t = t.clamp_min(0)
         return (
-                       extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
-                       extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
-               ) * t_cond + x_start * (1 - t_cond)
+                extract(self.sqrt_alphas_cumprod, t, x_start.shape) * x_start +
+                extract(self.sqrt_one_minus_alphas_cumprod, t, x_start.shape) * noise
+        ) * t_cond + x_start * (1 - t_cond)
 
     @torch.no_grad()
     def p_sample(self, x, t, cond, img_lr_up, noise_pred=None, clip_denoised=True, repeat_noise=False):
