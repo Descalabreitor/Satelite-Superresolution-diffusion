@@ -14,15 +14,14 @@ from utils.tensor_utils import tensor2img, move_to_cuda
 
 def setUpTrainingObjects(config):
     model_builder = SRDiffBuilder()
-    model_builder = model_builder.set_standart()
-    model_builder = model_builder.set_timesteps(200) #Doblamos los pasos
+    model_builder = model_builder.set_large()
+    model_builder = model_builder.set_timesteps(300) #triplicamos los pasos
     model_builder = model_builder.use_pretrained_rrdb(config['pretrained_rrdb'])
     model, _ = model_builder.build()
 
     optimizer = buildOptimizer(config, model)
 
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min',
-                                                           factor=config['factor'], patience=config['patience'])
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config['num_epochs'], eta_min=1e-6)
 
     return model, optimizer, scheduler, model_builder.get_hyperparameters()
 
@@ -86,7 +85,7 @@ def execute(config):
         log_data_local["train_loss"] = float(train_loss)
         torch.cuda.empty_cache()
 
-        if epoch % 50 == 0 and epoch != 0:
+        if epoch % 25 == 0 and epoch != 0:
             log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
@@ -96,7 +95,7 @@ def execute(config):
         torch.cuda.empty_cache()
 
     log_data_wandb = {}
-    log_data_wandb = execute_check(config, test_dataloader, config["n_epochs"], trainer, log_data_wandb)
+    log_data_wandb = execute_check(config, test_dataloader, config["num_epochs"], trainer, log_data_wandb, log_data_local)
     wandb.log(log_data_wandb)
 
     wandb.finish()
@@ -104,10 +103,8 @@ def execute(config):
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 300,
+        'num_epochs': 50,
         'lr': 1e-4,
-        'patience': 5,
-        'factor': 0.1,
         'fix_rrdb': True,
         'use_rrdb': True,
         "aux_l1_loss": False,
@@ -115,15 +112,15 @@ if __name__ == "__main__":
         "aux_ssim_loss": False,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 25,
+        'batch_size': 10,
         'grad_acum': 1,
         "num_workers": 1,
-        "model_name": "SRDiff ver9",
+        "model_name": "SRDiff ver12",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 9",
-        "project_root":"C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
-        "dataset_path":"C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
+        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 12",
+        "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+        "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
         "start_epoch": 0,
         "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt",
