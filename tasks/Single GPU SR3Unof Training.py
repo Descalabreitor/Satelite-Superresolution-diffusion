@@ -14,7 +14,7 @@ from utils.tensor_utils import tensor2img, move_to_cuda
 
 def setUpTrainingObjects(config):
     model_builder = SR3unofBuilder()
-    model_builder = model_builder.set_default()
+    model_builder = model_builder.set_papersm()
     model = model_builder.build()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
@@ -59,7 +59,7 @@ def execute(config):
     wandb.login(relogin=True, key="e13381c1bc10ba98afb7a152e624e1fc4d097e54")
     wandb.init(project="SR3 experiments", config=config.update(model_data),
                name=config['model_name'] + f"_{config['start_epoch']}")
-    utils.logger_utils.log_config(config, "SR3Unof")
+    utils.logger_utils.log_config(config, "SR3Unoff")
 
     log_data_local = {}
     for epoch in range(config["start_epoch"] + 1, config['num_epochs'] + 1):
@@ -80,7 +80,7 @@ def execute(config):
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
         utils.logger_utils.dict_to_csv(log_data_local,
-                                       f"{config["project_root"]}\\logs\\SR3Unof\\{config["model_name"]}")
+                                       f"{config["project_root"]}\\logs\\SR3Unoff\\{config["model_name"]}")
         wandb.log(log_data_wandb)
         torch.cuda.empty_cache()
 
@@ -93,7 +93,7 @@ def execute(config):
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 500,
+        'num_epochs': 300,
         'lr': 1e-6,
         'patience': 10,
         'factor': 0.1,
@@ -104,15 +104,15 @@ if __name__ == "__main__":
         "aux_ssim_loss": False,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 7,
-        'grad_acum': 1,
+        'batch_size': 3,
+        'grad_acum': 3,
         "num_workers": 1,
-        "model_name": "SR3Unoff ver1",
+        "model_name": "SR3_paper",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SR3Unoff\\version 1",
-        "project_root": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking",
-        "dataset_path": "C:\\Users\\adria\\Desktop\\dataset_tfg",
+        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SR3Unoff\\SR3_paper",
+        "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+        "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
         "start_epoch": 0,
     }

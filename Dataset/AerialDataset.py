@@ -40,7 +40,6 @@ class AerialDataset(Dataset):
             bicubic_image = PIL.Image.open(self.aux_sat_images[(idx * 8) + np.random.randint(0, 7)])
             #Hay 8 imagenes satelitales por cada imagen normal. Multiplicamos por 8 para ir a la primera equivalente
             # y escogemos una aleatoria entre esas 8 sumando un número entre 0 y 7
-            lr_image = transforms.ToTensor()(lr_image)
 
         if self.data_augmentation:
             seed = np.random.randint(0, 2**10)

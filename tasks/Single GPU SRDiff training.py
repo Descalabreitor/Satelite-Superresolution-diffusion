@@ -21,7 +21,7 @@ def setUpTrainingObjects(config):
 
     optimizer = buildOptimizer(config, model)
 
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config['num_epochs'], eta_min=1e-6)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config['num_epochs'], eta_min=1e-7)
 
     return model, optimizer, scheduler, model_builder.get_hyperparameters()
 
@@ -103,8 +103,8 @@ def execute(config):
 
 if __name__ == "__main__":
     config = {
-        'num_epochs': 50,
-        'lr': 1e-4,
+        'num_epochs': 100,
+        'lr': 1e-5,
         'fix_rrdb': True,
         'use_rrdb': True,
         "aux_l1_loss": False,
@@ -122,7 +122,7 @@ if __name__ == "__main__":
         "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
         "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
-        "start_epoch": 0,
-        "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt",
+        "start_epoch": 50,
+        "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained large Epoch50.pt",
     }
     execute(config)

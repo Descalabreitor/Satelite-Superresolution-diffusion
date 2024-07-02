@@ -11,11 +11,11 @@ def setUpDataloaders(config, dataset_root):
     hr_size = config['hr_size']
 
     transforms = Compose([
-        RandomHorizontalFlip(0.2),
-        RandomVerticalFlip(0.2)]
+        RandomHorizontalFlip(0.5),
+        RandomVerticalFlip(0.5)]
     )
 
-    dataset = AerialDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0,
+    dataset = AerialDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
                             sat_dataset_path=dataset_root + '\\satelite_dataset', ) #Desactivamos fotos de satelite de momento
     train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
                                                             generator=torch.Generator().manual_seed(420))
