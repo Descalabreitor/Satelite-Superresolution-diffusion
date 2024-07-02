@@ -3,18 +3,21 @@ import json
 import PIL.Image
 import torch
 import wandb
+from torch.utils.data import random_split, DataLoader
+from torchvision.transforms.v2 import RandomHorizontalFlip, Compose, RandomVerticalFlip
 
 import utils.logger_utils
+from Dataset.AerialDataset import AerialDataset
 from tasks.trainers.SR3UnofTrainer import SR3UnofTrainer
 from models.SR3unofBuilder import SR3unofBuilder
-from Dataset.StandartDaloader import setUpDataloaders
+from Dataset.StandartDaloader import setUpStandartDataloaders
 from utils.model_utils import load_model
 from utils.tensor_utils import tensor2img, move_to_cuda
 
 
 def setUpTrainingObjects(config):
     model_builder = SR3unofBuilder()
-    model_builder = model_builder.set_default()
+    model_builder = model_builder.set_papersm()
     model = model_builder.build()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
@@ -40,6 +43,28 @@ def execute_check(config, test_dataloader, epoch, trainer, log_data_wandb, log_d
         log_data_local[metric] = float(metrics[metric])
 
     return log_data_wandb, log_data_local
+
+
+def setUpDataloaders(config,dataset_root):
+    lr_size = config['lr_size']
+    hr_size = config['hr_size']
+
+    transforms = Compose([
+        RandomHorizontalFlip(0.5),
+        RandomVerticalFlip(0.5)]
+    )
+
+    dataset = AerialDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
+                            sat_dataset_path=dataset_root + '\\satelite_dataset', n_revisits=3)
+    train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
+                                                            generator=torch.Generator().manual_seed(420))
+
+    train_dataloader = DataLoader(train_dataset, batch_size=config['batch_size'], shuffle=True)
+    val_dataloader = DataLoader(val_dataset, batch_size=config['batch_size'], shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=config['batch_size'], shuffle=True)
+
+    return train_dataloader, val_dataloader, test_dataloader
+
 
 
 def execute(config):
@@ -75,7 +100,7 @@ def execute(config):
         log_data_local["train_loss"] = float(train_loss)
         torch.cuda.empty_cache()
 
-        if epoch % 100 == 0:
+        if epoch % 25 == 0:
             log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
@@ -85,32 +110,28 @@ def execute(config):
         torch.cuda.empty_cache()
 
     log_data_wandb = {}
-    log_data_wandb = execute_check(config, test_dataloader, config["n_epochs"], trainer, log_data_wandb)
+    log_data_wandb = execute_check(config, test_dataloader, config["num_epochs"], trainer, log_data_wandb, log_data_local)
     wandb.log(log_data_wandb)
 
     wandb.finish()
 
 
 if __name__ == "__main__":
+
     config = {
-        'num_epochs': 500,
+        'num_epochs': 50,
         'lr': 1e-6,
-        'patience': 10,
+        'patience': 5,
         'factor': 0.1,
-        'fix_rrdb': True,
-        'use_rrdb': True,
-        "aux_l1_loss": False,
-        "aux_perceptual_loss": False,
-        "aux_ssim_loss": False,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 7,
+        'batch_size': 5,
         'grad_acum': 1,
         "num_workers": 1,
-        "model_name": "SR3Unoff ver1",
+        "model_name": "SR3 paper",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SR3Unoff\\version 1",
+        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SR3 paper",
         "project_root": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking",
         "dataset_path": "C:\\Users\\adria\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),

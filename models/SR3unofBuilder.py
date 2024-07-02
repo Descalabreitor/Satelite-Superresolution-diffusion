@@ -114,6 +114,29 @@ class SR3unofBuilder:
 
         return self
 
+    def set_papersm(self):
+        self.in_channel = 6
+        self.out_channel = 3
+        self.inner_channel = 96
+        self.norm_groups = 16
+        self.channel_mults = [1, 2, 4, 4, 8, 8]
+        self.res_blocks = 3
+        self.dropout = 0
+
+        self.schedule_opt = {
+            "schedule": "linear",
+            "n_timestep": 2000,
+            "linear_start": 1e-6,
+            "linear_end": 1e-2
+        }
+
+        self.losstype = "l1"
+        self.conditional = True
+        self.channels = 3
+        self.attn_res = [8]
+
+        return self
+
     def get_hyperparameters(self):
         hyperparameters = {
             "in_channel": self.in_channel,
@@ -129,4 +152,28 @@ class SR3unofBuilder:
             "schedule_opt": self.schedule_opt,
         }
         return hyperparameters
+
+    def set_plus(self):
+        self.in_channel = 6
+        self.out_channel = 3
+        self.inner_channel = 64
+        self.norm_groups = 16
+        self.channel_mults = [1, 2, 2, 4, 4, 4, 8, 8]
+        self.res_blocks = 1
+        self.dropout = 0
+
+        self.schedule_opt = {
+            "schedule": "linear",
+            "n_timestep": 2000,
+            "linear_start": 1e-6,
+            "linear_end": 1e-2
+        }
+
+        self.losstype = "l1"
+        self.conditional = True
+        self.channels = 3
+        self.attn_res = []
+
+        return self
+
 
