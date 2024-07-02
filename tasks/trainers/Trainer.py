@@ -2,7 +2,7 @@ import torch
 from torchmetrics.image import StructuralSimilarityIndexMeasure, PeakSignalNoiseRatio
 from tqdm import tqdm
 
-from utils.model_utils import save_model, load_model
+from utils.model_utils import save_model
 from utils.tensor_utils import move_to_cuda, tensors_to_scalars
 
 

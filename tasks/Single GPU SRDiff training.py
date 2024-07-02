@@ -7,13 +7,14 @@ import wandb
 import utils.logger_utils
 from tasks.trainers.SRDiffTrainer import SRDiffTrainer
 from models.SRDIFFBuilder import SRDiffBuilder
-from Dataset.StandartDaloader import setUpDataloaders
+from Dataset.StandartDaloader import setUpStandartDataloaders
 from utils.model_utils import load_model
 from utils.tensor_utils import tensor2img, move_to_cuda
 
 
 def setUpTrainingObjects(config):
     model_builder = SRDiffBuilder()
+
     model_builder = model_builder.set_large()
     model_builder = model_builder.set_timesteps(300) #triplicamos los pasos
     model_builder = model_builder.use_pretrained_rrdb(config['pretrained_rrdb'])
@@ -56,7 +57,7 @@ def execute(config):
     model, optimizer, scheduler, model_data = setUpTrainingObjects(config)
 
     model.to(config["device"])
-    train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, config['dataset_path'])
+    train_dataloader, val_dataloader, test_dataloader = setUpStandartDataloaders(config, config['dataset_path'])
     if config["start_epoch"] > 0:
         model = load_model(model, f"{config['model_name']} Epoch{config["start_epoch"]}.pt", config["save_dir"])
 
@@ -95,6 +96,7 @@ def execute(config):
         torch.cuda.empty_cache()
 
     log_data_wandb = {}
+
     log_data_wandb = execute_check(config, test_dataloader, config["num_epochs"], trainer, log_data_wandb, log_data_local)
     wandb.log(log_data_wandb)
 

@@ -9,7 +9,7 @@ def bicubic_interpolation(image, objective_dim):  # De momento lo implementare p
     new_image = image.resize(objective_dim, Image.BICUBIC)
     return new_image
 
-def process_images(dataset_dir, results_dir, objective_dim):
+def process_images(dataset_dir, results_dir, objective_dim, method):
     for image_file in tqdm(os.listdir(dataset_dir)):
         image = Image.open(os.path.join(dataset_dir, image_file))
         interpolated_image = bicubic_interpolation(image, objective_dim)

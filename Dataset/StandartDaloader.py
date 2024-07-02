@@ -6,7 +6,7 @@ from Dataset.AerialDataset import AerialDataset
 from utils.DDP_utils import prepare_data
 
 
-def setUpDataloaders(config, dataset_root):
+def setUpStandartDataloaders(config, dataset_root):
     lr_size = config['lr_size']
     hr_size = config['hr_size']
 
