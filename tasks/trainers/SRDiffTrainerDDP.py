@@ -1,11 +1,9 @@
-import numpy as np
-from tqdm import tqdm
 from torch.nn.parallel import DistributedDataParallel as DDP
+from tqdm import tqdm
 
 import utils.model_utils
 from SRDiffTrainer import SRDiffTrainer
 from utils.tensor_utils import *
-from utils.logger_utils import *
 
 
 class SRDiffTrainerDDP(SRDiffTrainer):

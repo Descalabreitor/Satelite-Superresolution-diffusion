@@ -4,7 +4,7 @@ import PIL.Image
 import torch
 import wandb
 
-from Dataset.StandartDaloader import setUpDataloaders
+from Dataset.StandartDaloader import setUpStandartDataloaders
 from models.SRDIFFBuilder import SRDiffBuilder
 from tasks.trainers.RRDBTrainer import RRDBTrainer
 from utils import logger_utils
@@ -41,7 +41,7 @@ def execute(config):
 
     model.to(config["device"])
 
-    train_dataloader, val_dataloader, test_dataloader = setUpDataloaders(config, config["dataset_path"])
+    train_dataloader, val_dataloader, test_dataloader = setUpStandartDataloaders(config, config["dataset_path"])
 
     if config["start_epoch"] > 0:
         model = load_model(model, f"{config['model_name']} Epoch{config["start_epoch"]}.pt", config["save_dir"])
