@@ -46,12 +46,14 @@ class Trainer:
                     self.optimizer.zero_grad()
                     total_loss.backward()
                     self.optimizer.step()
+                    self.scheduler.step()
                 else:
                     total_loss.backward()
             else:
                 self.optimizer.zero_grad()
                 total_loss.backward()
                 self.optimizer.step()
+                self.scheduler.step()
 
             final_loss += total_loss
             train_pbar.set_postfix(**tensors_to_scalars(losses))
@@ -71,7 +73,7 @@ class Trainer:
             total_loss = sum(losses.values())
             val_pbar.set_postfix(**tensors_to_scalars(losses))
             final_loss += total_loss
-        self.scheduler.step(final_loss / len(self.val_dataloader))
+
         return final_loss / len(self.val_dataloader)
 
     @torch.no_grad()
