@@ -1,13 +1,12 @@
 import PIL.Image
 import torch
+import torch.multiprocessing as mp
 import wandb
 from torch.distributed import destroy_process_group
 
+import utils.DDP_utils as ddp_utils
 from models.SR3Builder import SR3Builder
 from tasks.trainers.SR3DDPTrainer import SR3DDPTrainer
-import utils.DDP_utils as ddp_utils
-import torch.multiprocessing as mp
-
 from utils.model_utils import load_model
 from utils.tensor_utils import tensor2img, move_to_cuda
 

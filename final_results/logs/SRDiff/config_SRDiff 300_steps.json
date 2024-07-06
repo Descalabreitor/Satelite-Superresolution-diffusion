@@ -1,0 +1,40 @@
+{
+    "num_epochs": 100,
+    "lr": 0.0001,
+    "fix_rrdb": true,
+    "use_rrdb": true,
+    "aux_l1_loss": false,
+    "aux_perceptual_loss": false,
+    "aux_ssim_loss": false,
+    "losstype": "l1",
+    "device": "cuda",
+    "batch_size": 25,
+    "grad_acum": 1,
+    "num_workers": 1,
+    "model_name": "SRDiff ver11",
+    "lr_size": 64,
+    "hr_size": 256,
+    "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SRDiff\\version 11",
+    "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+    "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
+    "metrics_used": [
+        "psnr",
+        "ssim"
+    ],
+    "start_epoch": 0,
+    "pretrained_rrdb": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB\\RRDB pretrained Epoch100.pt",
+    "weight_decay": 1e-06,
+    "aux_l1": false,
+    "aux_perceptual": false,
+    "scale": 4,
+    "dim_mults": [
+        1,
+        2,
+        2,
+        4
+    ],
+    "timesteps": 300,
+    "rrdb_blocks": 8,
+    "rrdb_features": 32,
+    "hidden": 64
+}

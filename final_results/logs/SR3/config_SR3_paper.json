@@ -1,0 +1,49 @@
+{
+    "num_epochs": 300,
+    "lr": 1e-06,
+    "patience": 10,
+    "factor": 0.1,
+    "fix_rrdb": true,
+    "use_rrdb": true,
+    "aux_l1_loss": false,
+    "aux_perceptual_loss": false,
+    "aux_ssim_loss": false,
+    "losstype": "l1",
+    "device": "cuda",
+    "batch_size": 3,
+    "grad_acum": 3,
+    "num_workers": 1,
+    "model_name": "SR3_paper",
+    "lr_size": 64,
+    "hr_size": 256,
+    "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SR3Unoff\\SR3_paper",
+    "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+    "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
+    "metrics_used": [
+        "psnr",
+        "ssim"
+    ],
+    "start_epoch": 0,
+    "in_channel": 6,
+    "out_channel": 3,
+    "norm_groups": 16,
+    "channel_mults": [
+        1,
+        2,
+        4,
+        4,
+        8,
+        8
+    ],
+    "res_blocks": 3,
+    "dropout": 0,
+    "image_size": 256,
+    "channels": 3,
+    "conditional": true,
+    "schedule_opt": {
+        "schedule": "linear",
+        "n_timestep": 2000,
+        "linear_start": 1e-06,
+        "linear_end": 0.01
+    }
+}

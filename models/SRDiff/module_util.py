@@ -1,4 +1,5 @@
 from inspect import isfunction
+
 from torch import nn
 from torch.nn import init
 

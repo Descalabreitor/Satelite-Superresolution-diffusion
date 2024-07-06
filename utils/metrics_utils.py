@@ -1,6 +1,7 @@
 import math
-import numpy as np
+
 import cv2
+import numpy as np
 
 
 def calculate_all(img1, img2):

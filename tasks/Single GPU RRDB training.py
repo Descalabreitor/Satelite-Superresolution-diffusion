@@ -1,6 +1,3 @@
-import json
-
-import PIL.Image
 import torch
 import wandb
 
@@ -10,7 +7,6 @@ from tasks.trainers.RRDBTrainer import RRDBTrainer
 from utils import logger_utils
 from utils.logger_utils import log_config
 from utils.model_utils import load_model
-from utils.tensor_utils import move_to_cuda, tensor2img
 
 
 def setUpTrainingObjects(config):

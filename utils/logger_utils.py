@@ -3,7 +3,6 @@ import json
 import os
 
 import torch
-import wandb
 
 
 def dict_to_csv(data, filename):

@@ -5,7 +5,7 @@ from torch.distributed import init_process_group
 from torch.utils.data import DataLoader, DistributedSampler, random_split
 from torchvision.transforms.v2 import Compose, RandomVerticalFlip, RandomHorizontalFlip
 
-from Dataset.AerialDataset import AerialDataset
+from Dataset.SatImagesDataset import SatImagesDataset
 
 
 def ddp_setup(rank, world_size):
@@ -36,8 +36,8 @@ def set_up_data(hyperparams, dataset_dir, sat_dataset_dir, world_size):
         RandomVerticalFlip(0.2)]
     )
 
-    dataset = AerialDataset(dataset_dir, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.4,
-                            sat_dataset_path=sat_dataset_dir)
+    dataset = SatImagesDataset(dataset_dir, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.4,
+                               revisits_path=sat_dataset_dir)
     train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
                                                             generator=torch.Generator().manual_seed(420))
 

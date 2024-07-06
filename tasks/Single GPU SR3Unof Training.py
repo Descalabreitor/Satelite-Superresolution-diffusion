@@ -1,5 +1,3 @@
-import json
-
 import PIL.Image
 import torch
 import wandb
@@ -7,17 +5,23 @@ from torch.utils.data import random_split, DataLoader
 from torchvision.transforms.v2 import RandomHorizontalFlip, Compose, RandomVerticalFlip
 
 import utils.logger_utils
-from Dataset.AerialDataset import AerialDataset
+from Dataset.SatImagesDataset import SatImagesDataset
+from models.SR32Builder import SR32Builder
 from tasks.trainers.SR3UnofTrainer import SR3UnofTrainer
-from models.SR3unofBuilder import SR3unofBuilder
-from Dataset.StandartDaloader import setUpStandartDataloaders
 from utils.model_utils import load_model
 from utils.tensor_utils import tensor2img, move_to_cuda
 
 
 def setUpTrainingObjects(config):
-    model_builder = SR3unofBuilder()
-    model_builder = model_builder.set_papersm()
+    model_builder = SR32Builder()
+    model_builder = model_builder.set_default()
+    beta_scheduler = {
+        "schedule": "cosine",
+        "n_timestep": 300,
+        "linear_start": 1e-06,
+        "linear_end": 0.01
+    }
+    model_builder = model_builder.set_schedule_opt(beta_scheduler)
     model = model_builder.build()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=config['lr'])
@@ -54,8 +58,8 @@ def setUpDataloaders(config,dataset_root):
         RandomVerticalFlip(0.5)]
     )
 
-    dataset = AerialDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
-                            sat_dataset_path=dataset_root + '\\satelite_dataset', n_revisits=3)
+    dataset = SatImagesDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
+                               revisits_path=dataset_root + '\\satelite_dataset', n_revisits=8)
     train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
                                                             generator=torch.Generator().manual_seed(420))
 
@@ -84,7 +88,7 @@ def execute(config):
     wandb.login(relogin=True, key="e13381c1bc10ba98afb7a152e624e1fc4d097e54")
     wandb.init(project="SR3 experiments", config=config.update(model_data),
                name=config['model_name'] + f"_{config['start_epoch']}")
-    utils.logger_utils.log_config(config, "SR3Unoff")
+    utils.logger_utils.log_config(config, "SR3b")
 
     log_data_local = {}
     for epoch in range(config["start_epoch"] + 1, config['num_epochs'] + 1):
@@ -100,12 +104,12 @@ def execute(config):
         log_data_local["train_loss"] = float(train_loss)
         torch.cuda.empty_cache()
 
-        if epoch % 25 == 0:
+        if epoch % 100 == 0:
             log_data_wandb, log_data_local = execute_check(config, test_dataloader, epoch, trainer,
                                                            log_data_wandb, log_data_local)
         log_data_local["epoch"] = epoch
         utils.logger_utils.dict_to_csv(log_data_local,
-                                       f"{config["project_root"]}\\logs\\SR3Unoff\\{config["model_name"]}")
+                                       f"{config["project_root"]}\\logs\\SR3b\\{config["model_name"]}")
         wandb.log(log_data_wandb)
         torch.cuda.empty_cache()
 
@@ -119,21 +123,21 @@ def execute(config):
 if __name__ == "__main__":
 
     config = {
-        'num_epochs': 300,
+        'num_epochs': 200,
         'lr': 1e-6,
         'patience': 5,
         'factor': 0.1,
         "losstype": "l1",
         'device': torch.device('cuda' if torch.cuda.is_available() else 'cpu'),
-        'batch_size': 3,
-        'grad_acum': 3,
+        'batch_size': 6,
+        'grad_acum': 1,
         "num_workers": 1,
-        "model_name": "SR3_paper",
+        "model_name": "SR3b ver3 DA",
         "lr_size": 64,
         "hr_size": 256,
-        "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\SR3Unoff\\SR3_paper",
-        "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
-        "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
+        "save_dir": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking\\saved models\\SR3b\\version 3 DA",
+        "project_root": "C:\\Users\\adria\\Desktop\\TFG-code\\SR-model-benchmarking",
+        "dataset_path": "C:\\Users\\adria\\Desktop\\dataset_tfg",
         "metrics_used": ("psnr", "ssim"),
         "start_epoch": 0,
     }

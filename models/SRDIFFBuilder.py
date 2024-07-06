@@ -1,7 +1,7 @@
 import torch
 
-from models.SRDiff.diffusion import GaussianDiffusion
 from models.SRDiff.diffsr_modules import Unet, RRDBNet
+from models.SRDiff.diffusion import GaussianDiffusion
 
 
 class SRDiffBuilder:

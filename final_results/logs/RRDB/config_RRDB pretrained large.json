@@ -1,0 +1,37 @@
+{
+    "num_epochs": 50,
+    "lr": 0.0001,
+    "losstype": "l1",
+    "device": "cuda",
+    "batch_size": 45,
+    "grad_acum": 1,
+    "num_workers": 1,
+    "model_name": "RRDB pretrained large",
+    "lr_size": 64,
+    "hr_size": 256,
+    "save_dir": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking\\saved models\\RRDB",
+    "metrics_used": [
+        "psnr",
+        "ssim"
+    ],
+    "start_epoch": 0,
+    "dataset_path": "C:\\Users\\adrianperera\\Desktop\\dataset_tfg",
+    "project_root": "C:\\Users\\adrianperera\\Desktop\\SR-model-benchmarking",
+    "grad_loss_weight": 0.1,
+    "aux_l1": false,
+    "aux_perceptual": false,
+    "scale": 4,
+    "dim_mults": [
+        1,
+        2,
+        2,
+        4,
+        4,
+        8,
+        8
+    ],
+    "timesteps": 100,
+    "rrdb_blocks": 8,
+    "rrdb_features": 32,
+    "hidden": 128
+}

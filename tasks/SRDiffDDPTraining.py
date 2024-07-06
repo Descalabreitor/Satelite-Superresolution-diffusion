@@ -1,12 +1,11 @@
 import torch
+import torch.multiprocessing as mp
 import wandb
 from torch.distributed import destroy_process_group
 
 from models.SRDIFFBuilder import SRDiffBuilder
 from tasks.trainers.SRDiffTrainerDDP import SRDiffTrainerDDP
 from utils.DDP_utils import set_up_data, ddp_setup
-import torch.multiprocessing as mp
-
 
 
 def set_up_trainer(hyperparams, rank):

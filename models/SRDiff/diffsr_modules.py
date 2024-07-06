@@ -1,10 +1,12 @@
 import functools
+
 import torch
-from torch import nn
 import torch.nn.functional as F
-from .module_util import make_layer, initialize_weights
+from torch import nn
+
 from .commons import Mish, SinusoidalPosEmb, RRDB, Residual, Rezero, LinearAttention
 from .commons import ResnetBlock, Upsample, Block, Downsample
+from .module_util import make_layer, initialize_weights
 
 
 class RRDBNet(nn.Module):

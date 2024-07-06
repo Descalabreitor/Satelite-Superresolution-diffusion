@@ -1,10 +1,6 @@
-from tqdm import tqdm
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from extra_losses.gradient_loss import GradientVariance
 
 
 class GaussianDiffusion(nn.Module):

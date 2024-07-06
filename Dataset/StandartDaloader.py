@@ -2,7 +2,7 @@ import torch
 from torch.utils.data import random_split, DataLoader
 from torchvision.transforms.v2 import Compose, RandomHorizontalFlip, RandomVerticalFlip
 
-from Dataset.AerialDataset import AerialDataset
+from Dataset.SatImagesDataset import SatImagesDataset
 from utils.DDP_utils import prepare_data
 
 
@@ -15,8 +15,8 @@ def setUpStandartDataloaders(config, dataset_root):
         RandomVerticalFlip(0.5)]
     )
 
-    dataset = AerialDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
-                            sat_dataset_path=dataset_root + '\\satelite_dataset', ) #Desactivamos fotos de satelite de momento
+    dataset = SatImagesDataset(dataset_root, lr_size, hr_size, data_augmentation=transforms, aux_sat_prob=0.5,
+                               revisits_path=dataset_root + '\\satelite_dataset', ) #Desactivamos fotos de satelite de momento
     train_dataset, val_dataset, test_dataset = random_split(dataset, [0.6, 0.2, 0.2],
                                                             generator=torch.Generator().manual_seed(420))
     if config['num_workers'] > 1:

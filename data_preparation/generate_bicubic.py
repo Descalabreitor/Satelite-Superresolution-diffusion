@@ -1,9 +1,9 @@
 import os
 import sys
-import numpy as np
-from scipy.interpolate import interpn
+
 from PIL import Image
 from tqdm import tqdm
+
 
 def bicubic_interpolation(image, objective_dim):  # De momento lo implementare para 1 sola foto a la vez
     new_image = image.resize(objective_dim, Image.BICUBIC)

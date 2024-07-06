@@ -1,10 +1,11 @@
+from math import exp
+
+import numpy as np
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 from torch.autograd import Variable
-import numpy as np
-from math import exp
-import torch.nn as nn
 
 
 class ImgMerger:
