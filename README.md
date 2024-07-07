@@ -7,7 +7,7 @@ Para poder usar el codigo disponible se deben instalar los paquetes dispuestos e
 ```
 conda create --name <env> --file requirements.txt
 ```
-Será necesario tener disponible cuda y cudatoolkits.
+Será necesario tener disponible cuda y cudatoolkits, con las versiones correspondientes al equipo disponible.
 
 ### Datos de experimentos
 Los datos de experimentos se encuentran en la carpeta "final_results" en ella se encuentran las imagenes de muestra producidas durante el entrenamiento así como los modelos guardados.
@@ -17,8 +17,9 @@ Para probar los modelos se dispone del notebook "visualization_experiments" desd
 
 ### Dataset
 
-El dataset usado esta disponible en [google drive](https://drive.google.com/file/d/1M5EKvODW2XgknEIxPVwziHfFaDKWtk1U/view?usp=sharing). Para usarlo simplemente indicar su dirección donde se indique.
+El dataset usado esta disponible en [google drive](https://drive.google.com/file/d/1M5EKvODW2XgknEIxPVwziHfFaDKWtk1U/view?usp=sharing). Para usarlo simplemente indicar su dirección en disco donde se indique.
 
 ### Implementaciones
-
-### Citamos otros reps
+Implementaciones:
+- [SR3](https://github.com/Janspiry/Image-Super-Resolution-via-Iterative-Refinement/tree/master)
+- [SRDiff](https://github.com/LeiaLi/SRDiff)
