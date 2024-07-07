@@ -12,8 +12,11 @@ Será necesario tener disponible cuda y cudatoolkits, con las versiones correspo
 ### Datos de experimentos
 Los datos de experimentos se encuentran en la carpeta "final_results" en ella se encuentran las imagenes de muestra producidas durante el entrenamiento así como los modelos guardados.
 
-### Probar modelos
+### Superresolución a imagen
 Para probar los modelos se dispone del notebook "visualization_experiments" desde el cual se pueden probar comodamente todos los modelos para generar imagenes.
+
+## Entrenamiento
+Para probar modelos propios o con otros datos. Los scripts en tasks son facilmente modificables para cumplir cualquier función que se proponga. 
 
 ### Dataset
 
